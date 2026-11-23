@@ -1,57 +1,50 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <script>
-    // 1. 偵測並摧毀所有 Service Worker (離線複本的根本原因)
+    // 1. 銷毀並登出所有 PWA/Service Worker（徹底防止顯示離線複本）
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.getRegistrations().then(function (registrations) {
-        if (registrations.length > 0) {
-          for (let registration of registrations) {
-            registration.unregister().then(function (boolean) {
-              if (boolean) {
-                console.log("已強行註銷 PWA！");
-                // 註銷成功後，立刻強制刷新，不使用任何快取
-                window.location.reload(true);
-              }
-            });
-          }
+        for (let registration of registrations) {
+          registration.unregister().then(function (success) {
+            if (success) {
+              console.log("已強行銷毀舊的離線備份！");
+              window.location.reload(true); // 註銷後立刻強刷，不使用快取
+            }
+          });
         }
       });
     }
-
-    // 2. 徹底清空 Cache Storage 檔案庫
+    // 2. 徹底清除 Cache Storage 快取庫
     if ("caches" in window) {
-      caches.keys().then(function (keys) {
-        keys.forEach(function (key) {
-          caches.delete(key);
-        });
+      caches.keys().then(function (names) {
+        for (let name of names) caches.delete(name);
       });
     }
-
-    // 3. 網址時間戳驗證 + LINE 強制外開：若無 v 參數則加上時間戳破壞 CDN/本機快取
+    // 3. 強制加上時間戳 t，打破所有 CDN 與手機瀏覽器的快取（並保留 LINE 外開參數）
     (function () {
-      const urlParams = new URLSearchParams(window.location.search);
+      const params = new URLSearchParams(window.location.search);
       const isLineOrWeChat = /Line\/|linesdk|micromessenger/i.test(navigator.userAgent || "");
       let changed = false;
 
-      if (!urlParams.has("v")) {
-        urlParams.set("v", String(new Date().getTime()));
+      if (!params.has("t")) {
+        params.set("t", String(Date.now()));
         changed = true;
       }
-      if (isLineOrWeChat && !urlParams.has("openExternalBrowser")) {
-        urlParams.set("openExternalBrowser", "1");
+      if (isLineOrWeChat && !params.has("openExternalBrowser")) {
+        params.set("openExternalBrowser", "1");
         changed = true;
       }
       if (changed) {
-        window.location.search = urlParams.toString();
+        window.location.search = params.toString();
       }
     })();
   </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-  <meta http-equiv="Pragma" content="no-cache" />
-  <meta http-equiv="Expires" content="0" />
   <title>珍妮花的詩歌PPT輸入器</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -2651,38 +2644,33 @@
       for (const slide of cfg.slides) {
         const s = pptx.addSlide();
         const bgCfg = cfg.getEffectiveBgFn(slide.isTitle);
+        const fallbackHex = hexNoHash(bgCfg.fadeBase || bgCfg.color || "#1F1230");
         const usesTitleImg = slide.isTitle && cfg.titleBg.mode === "image" && cfg.titleImgData;
         const usesLyricsImg = (!slide.isTitle || cfg.titleBg.mode === "same") && (cfg.lyricsBg.mode === "image" || cfg.lyricsBg.mode === "online") && cfg.lyricsImgData;
         const imgData = usesTitleImg ? cfg.titleImgData : (usesLyricsImg ? cfg.lyricsImgData : null);
 
-        if (imgData) {
-          const opacity = Math.max(0, Math.min(100, Number(bgCfg.opacity ?? 100)));
-          if (opacity >= 99) {
+        try {
+          if (imgData) {
             s.background = { data: imgData };
+          } else if (bgCfg.mode === "gradient") {
+            if (slide.isTitle && cfg.titleBg.mode !== "same") {
+              gradTitleCache = gradTitleCache || renderGradientDataUrl(bgCfg);
+              s.background = gradTitleCache;
+            } else {
+              gradLyricsCache = gradLyricsCache || renderGradientDataUrl(bgCfg);
+              s.background = gradLyricsCache;
+            }
           } else {
-            s.background = { color: hexNoHash(bgCfg.fadeBase) };
-            s.addImage({
-              data: imgData,
-              x: 0,
-              y: 0,
-              w: SLIDE_W_IN,
-              h: SLIDE_H_IN,
-              transparency: Math.round(100 - opacity)
-            });
+            s.background = { color: blendColor(bgCfg.color, bgCfg.fadeBase, bgCfg.opacity) };
           }
-        } else if (bgCfg.mode === "gradient") {
-          if (slide.isTitle && cfg.titleBg.mode !== "same") {
-            gradTitleCache = gradTitleCache || renderGradientDataUrl(bgCfg);
-            s.background = gradTitleCache;
-          } else {
-            gradLyricsCache = gradLyricsCache || renderGradientDataUrl(bgCfg);
-            s.background = gradLyricsCache;
-          }
-        } else {
-          s.background = { color: blendColor(bgCfg.color, bgCfg.fadeBase, bgCfg.opacity) };
+        } catch {
+          s.background = { color: fallbackHex };
         }
 
-        const box = computePptxBoxInches(slide);
+        const box = slide.isTitle
+          ? computePptxBoxInches(slide)
+          : { x: 0.5, y: 0.5625, w: 9.0, h: 1.6875 }; // Y: 10%, W: 90%, H: 30% on 16:9 (10" x 5.625")
+
         const textBoxOpts = {
           x: box.x,
           y: box.y,
