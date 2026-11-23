@@ -1,0 +1,3501 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>珍妮花的詩歌PPT輸入器</title>
+  <script>
+    /* LINE 內建瀏覽器早期強制外開攔截器：一進入立即觸發 ?openExternalBrowser=1 跳出至手機預設 Safari / Chrome */
+    (function () {
+      var ua = navigator.userAgent || "";
+      if (/Line\/|linesdk|micromessenger/i.test(ua)) {
+        if (!/[?&]openExternalBrowser=1\b/i.test(window.location.search)) {
+          window.location.href = window.location.href + (window.location.search ? "&" : "?") + "openExternalBrowser=1";
+        }
+      }
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=LXGW+WenKai+TC:wght@400;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js" defer></script>
+  <style>
+    :root {
+      --iris-deep: #523775;
+      --iris-mid: #6b4c8c;
+      --iris-soft: #9374b8;
+      --iris-bg: #faf7fe;
+      --iris-border: #e3d7f2;
+      --iris-card: #ffffff;
+      --text-main: #2b1d3d;
+      --text-muted: #6e5c84;
+      --radius-lg: 16px;
+      --radius-md: 10px;
+      --shadow-sm: 0 2px 10px rgba(82, 55, 117, 0.08);
+      --shadow-md: 0 8px 24px rgba(82, 55, 117, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Microsoft JhengHei", "Noto Sans TC", "Inter", sans-serif;
+      background: var(--iris-bg);
+      color: var(--text-main);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Header */
+    .app-header {
+      background: linear-gradient(135deg, #523775 0%, #6b4c8c 100%);
+      color: #ffffff;
+      padding: 16px 20px;
+      box-shadow: var(--shadow-md);
+      position: sticky;
+      top: 0;
+      z-index: 40;
+    }
+    .header-inner {
+      max-width: 1160px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* LINE In-App Browser Foolproof Overlay */
+    .line-guard-overlay {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(155deg, rgba(43, 25, 68, 0.96) 0%, rgba(82, 55, 117, 0.95) 55%, rgba(56, 33, 88, 0.97) 100%);
+      backdrop-filter: blur(10px);
+      z-index: 9999;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      color: #ffffff;
+      overflow-y: auto;
+    }
+    .line-guard-overlay.open {
+      display: flex;
+    }
+    .line-guard-pointer {
+      position: fixed;
+      top: 14px;
+      right: 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #ffe680;
+      color: #351e54;
+      font-weight: 800;
+      font-size: 0.92rem;
+      padding: 8px 14px;
+      border-radius: 999px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+      animation: lineBounce 1.4s infinite ease-in-out;
+      z-index: 10001;
+    }
+    @keyframes lineBounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+    .line-guard-card {
+      background: #ffffff;
+      color: var(--text-main);
+      border: 2px solid var(--iris-border);
+      border-radius: 22px;
+      max-width: 500px;
+      width: 100%;
+      padding: 26px 22px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+      text-align: center;
+      position: relative;
+      margin-top: 28px;
+    }
+    .line-guard-title {
+      margin: 10px 0 10px;
+      font-size: clamp(1.22rem, 4.2vw, 1.48rem);
+      font-weight: 800;
+      color: #4a2870;
+      line-height: 1.4;
+    }
+    .line-guard-desc {
+      margin: 0 0 16px;
+      font-size: 0.96rem;
+      color: #4b3b60;
+      line-height: 1.65;
+      text-align: left;
+      background: #f6f0fd;
+      border: 1px solid #dfd0f5;
+      padding: 12px 14px;
+      border-radius: 12px;
+    }
+    .line-guard-diagram {
+      background: linear-gradient(135deg, #faf7fe 0%, #f1e6fc 100%);
+      border: 1.5px dashed var(--iris-soft);
+      border-radius: 14px;
+      padding: 14px 12px;
+      margin-bottom: 18px;
+      text-align: left;
+    }
+    .line-guard-diagram-title {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--iris-deep);
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    .line-step-flow {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .line-step-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #ffffff;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--iris-border);
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+    .line-step-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 44px;
+      height: 32px;
+      background: var(--iris-deep);
+      color: #ffffff;
+      border-radius: 8px;
+      font-weight: 800;
+      font-size: 0.95rem;
+      padding: 0 8px;
+      flex-shrink: 0;
+    }
+    .line-guard-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .iris-emblem {
+      width: 40px;
+      height: 40px;
+      flex-shrink: 0;
+      filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.28));
+    }
+    .app-title {
+      margin: 0;
+      font-size: clamp(1.2rem, 3.2vw, 1.55rem);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+
+    /* Main Layout */
+    .main-container {
+      max-width: 1160px;
+      margin: 22px auto 48px;
+      padding: 0 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .step-card {
+      background: var(--iris-card);
+      border: 1px solid var(--iris-border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      box-shadow: var(--shadow-sm);
+    }
+    .step-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--iris-border);
+    }
+    .step-badge-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .step-num {
+      background: var(--iris-deep);
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 0.85rem;
+      padding: 4px 10px;
+      border-radius: 999px;
+      letter-spacing: 0.05em;
+    }
+    .step-title {
+      margin: 0;
+      font-size: 1.12rem;
+      font-weight: 700;
+      color: var(--iris-deep);
+    }
+
+    /* Controls & Tabs */
+    .seg-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      background: var(--iris-bg);
+      padding: 5px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--iris-border);
+      margin-bottom: 14px;
+    }
+    .seg-btn {
+      flex: 1 1 auto;
+      min-width: 90px;
+      padding: 8px 12px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      font-weight: 600;
+      border-radius: 7px;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      font-family: inherit;
+    }
+    .seg-btn.active {
+      background: var(--iris-deep);
+      color: #ffffff;
+      box-shadow: 0 2px 6px rgba(82, 55, 117, 0.25);
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+    .form-label {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--iris-deep);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .input-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1.5px solid var(--iris-border);
+      border-radius: var(--radius-md);
+      font-size: 0.95rem;
+      font-family: inherit;
+      color: var(--text-main);
+      background: #ffffff;
+      transition: border-color 0.15s;
+    }
+    input[type="text"]:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: var(--iris-mid);
+    }
+    textarea {
+      resize: vertical;
+      min-height: 180px;
+      line-height: 1.65;
+    }
+    input[type="color"] {
+      width: 44px;
+      height: 36px;
+      padding: 2px;
+      border: 1.5px solid var(--iris-border);
+      border-radius: 8px;
+      background: #ffffff;
+      cursor: pointer;
+    }
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--iris-deep);
+      cursor: pointer;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 9px 15px;
+      border-radius: var(--radius-md);
+      font-size: 0.9rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      border: 1.5px solid transparent;
+      transition: all 0.16s ease;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .btn-primary { background: var(--iris-deep); color: #ffffff; }
+    .btn-primary:hover { background: var(--iris-mid); }
+    .btn-secondary {
+      background: var(--iris-bg);
+      color: var(--iris-deep);
+      border-color: var(--iris-border);
+    }
+    .btn-secondary:hover { background: #efe7fa; }
+    .btn-accent {
+      background: linear-gradient(135deg, #6b4c8c, #523775);
+      color: #ffffff;
+      box-shadow: 0 3px 10px rgba(82, 55, 117, 0.25);
+    }
+    .btn-accent:hover { filter: brightness(1.06); }
+    .btn-sm { padding: 6px 11px; font-size: 0.82rem; }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    /* Swatches & Upload */
+    .swatch-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+    .swatch-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      border: 2px solid var(--iris-border);
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+    .swatch-btn:hover { transform: scale(1.08); }
+    .swatch-btn.active {
+      border-color: var(--iris-deep);
+      box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px var(--iris-deep);
+    }
+    .upload-box {
+      border: 2px dashed var(--iris-soft);
+      border-radius: var(--radius-md);
+      background: var(--iris-bg);
+      padding: 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .upload-box:hover { background: #f2eafc; }
+    .upload-box input[type="file"] { display: none; }
+
+    .sub-panel {
+      background: var(--iris-bg);
+      border: 1px solid var(--iris-border);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      margin-top: 8px;
+    }
+    .toggle-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--iris-deep);
+    }
+    .toggle-wrap input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--iris-deep);
+      cursor: pointer;
+    }
+    .pill-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .pill-btn {
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1.5px solid var(--iris-border);
+      background: #ffffff;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+    .pill-btn.active {
+      background: var(--iris-deep);
+      color: #ffffff;
+      border-color: var(--iris-deep);
+    }
+
+    /* Mood Recommendation Panel */
+    .mood-panel {
+      background: linear-gradient(135deg, #f6f0fd 0%, #fdfbff 100%);
+      border: 1.5px solid #d9c5f0;
+      border-radius: var(--radius-md);
+      padding: 14px;
+      margin-top: 14px;
+    }
+    .mood-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .mood-kw-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: #ffffff;
+      border: 1px solid var(--iris-border);
+      color: var(--iris-deep);
+      padding: 2px 9px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+    .theme-cards-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .theme-rec-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: #ffffff;
+      border: 1.5px solid var(--iris-border);
+      cursor: pointer;
+      transition: all 0.16s ease;
+      text-align: left;
+    }
+    .theme-rec-card:hover {
+      border-color: var(--iris-mid);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-sm);
+    }
+    .theme-rec-card.recommended {
+      border-color: var(--iris-deep);
+      box-shadow: 0 0 0 2px rgba(82, 55, 117, 0.15);
+    }
+    .theme-swatch-preview {
+      width: 42px;
+      height: 42px;
+      border-radius: 8px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.85rem;
+      border: 1px solid rgba(0,0,0,0.1);
+    }
+    .theme-rec-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .theme-rec-title {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .theme-rec-desc {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .rec-badge {
+      background: var(--iris-deep);
+      color: #fff;
+      font-size: 0.68rem;
+      padding: 1px 6px;
+      border-radius: 999px;
+      font-weight: 700;
+    }
+
+    /* Status & Photo Grid */
+    .status-note {
+      font-size: 0.85rem;
+      padding: 8px 12px;
+      border-radius: 8px;
+      margin-top: 6px;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .status-note.show { display: flex; }
+    .status-info {
+      background: #efe7fa;
+      color: var(--iris-deep);
+      border: 1px solid var(--iris-border);
+    }
+    .status-warn {
+      background: #fff7e6;
+      color: #8a5300;
+      border: 1px solid #ffd591;
+    }
+    .photo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .photo-thumb {
+      aspect-ratio: 16 / 9;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 2px solid var(--iris-border);
+      cursor: pointer;
+      background: #eee;
+    }
+    .photo-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .photo-thumb:hover { border-color: var(--iris-deep); }
+
+    /* Preview Grid */
+    .preview-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+    }
+    .slide-card {
+      border: 1.5px solid var(--iris-border);
+      border-radius: 12px;
+      overflow: hidden;
+      background: #ffffff;
+      box-shadow: var(--shadow-sm);
+      cursor: pointer;
+      transition: transform 0.16s, box-shadow 0.16s;
+    }
+    .slide-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--iris-mid);
+    }
+    .slide-card.is-chorus-card {
+      border-color: #8e55cc;
+    }
+    .slide-stage-wrap {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      overflow: hidden;
+      background: #523775;
+    }
+    .slide-bg-layer,
+    .slide-fade-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+    .slide-bg-layer {
+      background-size: cover;
+      background-position: center;
+    }
+    .slide-text-box {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 88%;
+      text-align: center;
+      word-break: keep-all;
+      overflow-wrap: break-word;
+      pointer-events: none;
+    }
+    .slide-card-footer {
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--iris-bg);
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .badge-title-slide {
+      background: var(--iris-deep);
+      color: #ffffff;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+    }
+    .badge-chorus-slide {
+      background: #8a3ab9;
+      color: #ffffff;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.74rem;
+    }
+    .badge-verse-slide {
+      background: #e4d7f5;
+      color: var(--iris-deep);
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.74rem;
+    }
+
+    /* Export & Modal */
+    .export-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px 20px;
+      background: linear-gradient(135deg, #f3ecfc, #faf7fe);
+      border: 1.5px solid var(--iris-border);
+      border-radius: var(--radius-lg);
+    }
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(29, 17, 46, 0.65);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 100;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal-card {
+      background: #ffffff;
+      border-radius: var(--radius-lg);
+      max-width: 760px;
+      width: 100%;
+      max-height: 92vh;
+      overflow-y: auto;
+      padding: 20px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+    }
+    .modal-stage {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1.5px solid var(--iris-border);
+      margin-bottom: 14px;
+      touch-action: none;
+      user-select: none;
+    }
+    .modal-drag-box {
+      position: absolute;
+      transform: translate(-50%, 0);
+      cursor: move;
+      text-align: center;
+      padding: 4px 10px;
+      border: 1.5px dashed rgba(255, 255, 255, 0.7);
+      border-radius: 6px;
+    }
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: linear-gradient(135deg, #4b2d73 0%, #6b4c8c 100%);
+      color: #ffffff;
+      border: 1.5px solid #d8c2f2;
+      padding: 12px 22px;
+      border-radius: 999px;
+      font-size: 0.92rem;
+      font-weight: 700;
+      box-shadow: 0 10px 28px rgba(82, 55, 117, 0.38);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.22s ease;
+      z-index: 10050;
+      max-width: 92vw;
+      text-align: center;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+    .line-share-bar {
+      background: linear-gradient(135deg, #f3ebfc 0%, #faf7fe 100%);
+      border: 1.5px solid #d5bfe9;
+      border-radius: var(--radius-md);
+      padding: 12px 16px;
+      margin-top: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .btn-line-direct {
+      background: linear-gradient(135deg, #06c755 0%, #05a847 100%);
+      color: #ffffff;
+      border: none;
+      box-shadow: 0 3px 10px rgba(6, 199, 85, 0.25);
+    }
+    .btn-line-direct:hover {
+      filter: brightness(1.05);
+      color: #ffffff;
+    }
+    .hidden { display: none !important; }
+
+    .song-search-actions {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      width: 100%;
+      margin-top: 6px;
+    }
+    .song-search-actions .btn {
+      width: 100%;
+      padding: 8px 6px;
+      font-size: 0.84rem;
+    }
+    .online-photo-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px dashed var(--iris-border);
+    }
+
+    @media (max-width: 600px) {
+      .step-card { padding: 14px; }
+      .btn { font-size: 0.85rem; padding: 8px 12px; }
+      .song-search-actions { gap: 6px; }
+      .song-search-actions .btn { font-size: 0.78rem; padding: 8px 4px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="header-brand">
+        <svg class="iris-emblem" viewBox="0 0 64 64" aria-hidden="true">
+          <defs>
+            <radialGradient id="irisTop" cx="45%" cy="30%" r="65%">
+              <stop offset="0%" stop-color="#e7d6ff" />
+              <stop offset="55%" stop-color="#9e74d4" />
+              <stop offset="100%" stop-color="#523775" />
+            </radialGradient>
+            <radialGradient id="irisFall" cx="50%" cy="35%" r="65%">
+              <stop offset="0%" stop-color="#c39ef0" />
+              <stop offset="60%" stop-color="#7149a3" />
+              <stop offset="100%" stop-color="#3b2259" />
+            </radialGradient>
+            <linearGradient id="irisGold" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#ffe680" />
+              <stop offset="100%" stop-color="#e09c1f" />
+            </linearGradient>
+          </defs>
+          <path d="M32 6 C22 14, 21 26, 32 33 C43 26, 42 14, 32 6 Z" fill="url(#irisTop)" />
+          <path d="M16 17 C8 22, 10 34, 26 35 C24 25, 22 19, 16 17 Z" fill="url(#irisTop)" opacity="0.92" />
+          <path d="M48 17 C56 22, 54 34, 38 35 C40 25, 42 19, 48 17 Z" fill="url(#irisTop)" opacity="0.92" />
+          <path d="M32 32 C16 32, 9 43, 16 53 C24 56, 30 46, 32 32 Z" fill="url(#irisFall)" />
+          <path d="M32 32 C48 32, 55 43, 48 53 C40 56, 34 46, 32 32 Z" fill="url(#irisFall)" />
+          <path d="M32 31 C24 38, 23 51, 32 58 C41 51, 40 38, 32 31 Z" fill="url(#irisFall)" />
+          <ellipse cx="32" cy="39" rx="3.2" ry="6.5" fill="url(#irisGold)" />
+          <path d="M30 56 L34 56 L33 62 L31 62 Z" fill="#639a55" />
+        </svg>
+        <h1 class="app-title">珍妮花的詩歌PPT輸入器</h1>
+      </div>
+    </div>
+  </header>
+
+  <!-- LINE / In-App Browser Auto Foolproof Overlay -->
+  <div class="line-guard-overlay" id="lineGuardOverlay" role="dialog" aria-modal="true" aria-labelledby="lineGuardTitle">
+    <div class="line-guard-pointer">
+      <span>請點選右上角選單</span>
+      <span style="font-size:1.25rem; line-height:1;">↗</span>
+    </div>
+    <div class="line-guard-card">
+      <svg width="54" height="54" viewBox="0 0 64 64" aria-hidden="true" style="margin:0 auto; display:block; filter:drop-shadow(0 4px 10px rgba(82,55,117,0.28));">
+        <path d="M32 6 C22 14, 21 26, 32 33 C43 26, 42 14, 32 6 Z" fill="#7c52b3" />
+        <path d="M16 17 C8 22, 10 34, 26 35 C24 25, 22 19, 16 17 Z" fill="#9374b8" />
+        <path d="M48 17 C56 22, 54 34, 38 35 C40 25, 42 19, 48 17 Z" fill="#9374b8" />
+        <path d="M32 32 C16 32, 9 43, 16 53 C24 56, 30 46, 32 32 Z" fill="#523775" />
+        <path d="M32 32 C48 32, 55 43, 48 53 C40 56, 34 46, 32 32 Z" fill="#523775" />
+        <path d="M32 31 C24 38, 23 51, 32 58 C41 51, 40 38, 32 31 Z" fill="#3b2259" />
+        <ellipse cx="32" cy="39" rx="3.2" ry="6.5" fill="#f5b82e" />
+      </svg>
+      <h2 class="line-guard-title" id="lineGuardTitle">⚠️ 請使用外部瀏覽器開啟，才能順利匯出 PPT！</h2>
+      <p class="line-guard-desc">
+        因 LINE 限制，直接在此處可能無法下載簡報檔案。請點選右上角『三個點 ...』，並選擇『在外部瀏覽器開啟』（或『在 Safari/Chrome 中開啟』）以正常使用完整功能。
+      </p>
+      <div class="line-guard-diagram">
+        <div class="line-guard-diagram-title">📌 2 步驟輕鬆切換外部瀏覽器示意圖</div>
+        <div class="line-step-flow">
+          <div class="line-step-item">
+            <span class="line-step-icon">⋮ / ···</span>
+            <span><strong>步驟 1：</strong>點擊 LINE 畫面右上角（或右下角）的「<strong>⋮</strong>」或「<strong>···</strong>」圖示</span>
+          </div>
+          <div class="line-step-item">
+            <span class="line-step-icon">🌐</span>
+            <span><strong>步驟 2：</strong>選擇「<strong>在預設瀏覽器中開啟</strong>」或「<strong>在 Safari / Chrome 中開啟</strong>」</span>
+          </div>
+        </div>
+      </div>
+      <div class="line-guard-actions">
+        <button type="button" class="btn btn-accent" id="btnForceExternalInOverlay" style="width:100%; padding:11px; font-size:0.95rem;">
+          🚀 立即跳出至外部瀏覽器（Safari / Chrome）
+        </button>
+        <button type="button" class="btn btn-primary" id="btnCopyUrlInOverlay" style="width:100%; padding:11px; font-size:0.95rem;">
+          📋 一鍵複製防呆網址（可貼到外部瀏覽器開啟）
+        </button>
+        <button type="button" class="btn btn-secondary" id="btnDismissLineOverlay" style="width:100%; padding:10px; font-size:0.92rem;">
+          我已了解，繼續瀏覽
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <main class="main-container">
+    <!-- STEP 01: Lyrics Background & Smart Mood Theme Recommendation -->
+    <section class="step-card">
+      <div class="step-header">
+        <div class="step-badge-title">
+          <span class="step-num">STEP 01</span>
+          <h2 class="step-title">歌詞頁底圖、透明度與意境配色推薦</h2>
+        </div>
+      </div>
+
+      <div class="seg-tabs" id="lyricsBgTabs">
+        <button type="button" class="seg-btn active" data-mode="solid">快速色票 / 單色</button>
+        <button type="button" class="seg-btn" data-mode="gradient">漸層背景</button>
+        <button type="button" class="seg-btn" data-mode="image">上傳圖片 / .PPTX</button>
+        <button type="button" class="seg-btn" data-mode="online">線上搜尋圖片</button>
+      </div>
+
+      <!-- Lyrics Solid -->
+      <div id="lyricsPanelSolid">
+        <div class="swatch-row">
+          <button type="button" class="swatch-btn active" style="background:#523775" data-color="#523775" title="鳶尾紫"></button>
+          <button type="button" class="swatch-btn" style="background:#556b2f" data-color="#556b2f" title="橄欖綠"></button>
+          <button type="button" class="swatch-btn" style="background:#f5efe6" data-color="#f5efe6" title="暖米白"></button>
+          <button type="button" class="swatch-btn" style="background:#1f3a52" data-color="#1f3a52" title="深海藍"></button>
+          <button type="button" class="swatch-btn" style="background:#2d2a32" data-color="#2d2a32" title="典雅炭灰"></button>
+          <button type="button" class="swatch-btn" style="background:#4a1c40" data-color="#4a1c40" title="破曉紫紅"></button>
+        </div>
+        <div class="input-row" style="margin-top:10px;">
+          <label class="form-label" for="lyricsSolidColor" style="margin:0;">自訂顏色：</label>
+          <input type="color" id="lyricsSolidColor" value="#523775" />
+        </div>
+      </div>
+
+      <!-- Lyrics Gradient -->
+      <div id="lyricsPanelGradient" class="hidden">
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">漸層雙色</label>
+            <div class="input-row">
+              <input type="color" id="lyricsGradC1" value="#523775" />
+              <input type="color" id="lyricsGradC2" value="#9374b8" />
+              <button type="button" class="btn btn-secondary btn-sm" id="lyricsGradSwap">⇄ 互換顏色</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">方向角度 (<span id="lyricsGradAngleVal">135°</span>) & 比例 (<span id="lyricsGradRatioVal">50%</span>)</label>
+            <div class="input-row">
+              <select id="lyricsGradAngle" style="width:auto; min-width:120px;">
+                <option value="0">0° (由下往上)</option>
+                <option value="45">45° (左下到右上)</option>
+                <option value="90">90° (由左往右)</option>
+                <option value="135" selected>135° (左上到右下)</option>
+                <option value="180">180° (由上往下)</option>
+              </select>
+              <input type="range" id="lyricsGradRatio" min="15" max="85" value="50" style="flex:1;" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Lyrics Image / PPTX Upload -->
+      <div id="lyricsPanelImage" class="hidden">
+        <label class="upload-box" for="lyricsFileInput">
+          <div>點擊上傳圖片（JPG / PNG / WebP）或 <strong>.pptx 簡報檔</strong></div>
+          <div style="font-size:0.82rem; color:var(--text-muted); margin-top:4px;">
+            若 .pptx 內含 2 張以上投影片底圖，第 1 張會自動套用至標題頁，第 2 張套用至歌詞頁
+          </div>
+          <input type="file" id="lyricsFileInput" accept="image/jpeg,image/png,image/webp,.pptx" />
+        </label>
+        <div id="lyricsImgStatus" class="status-note status-info"></div>
+      </div>
+
+      <!-- Lyrics Online Photo Search -->
+      <div id="lyricsPanelOnline" class="hidden">
+        <div class="input-row">
+          <input type="text" id="onlinePhotoQuery" placeholder="輸入關鍵字，例如：sky clouds, forest light, purple flower" value="nature sky light" style="flex:1;" />
+          <button type="button" class="btn btn-primary" id="btnSearchPhotos">搜尋圖片</button>
+        </div>
+        <div id="onlinePhotoStatus" class="status-note status-info"></div>
+        <div id="onlinePhotoGrid" class="photo-grid"></div>
+        <div class="online-photo-actions" id="onlinePhotoActions">
+          <button type="button" class="btn btn-secondary btn-sm" id="btnNextPhotoBatch">🔄 換一批新圖（不滿意換其他圖片）</button>
+          <div class="input-row" style="gap:6px;">
+            <span style="font-size:0.8rem; color:var(--text-muted); font-weight:600;">免費無版權圖庫快捷入口：</span>
+            <a id="btnUnsplashStock" class="btn btn-secondary btn-sm" target="_blank" rel="noopener noreferrer" data-stock-search="unsplash" href="https://unsplash.com/s/photos/nature%20sky%20light" onclick="forceOpenNewTab(event, this.href); return false;">🖼️ Unsplash 免費圖庫</a>
+            <a id="btnPexelsStock" class="btn btn-secondary btn-sm" target="_blank" rel="noopener noreferrer" data-stock-search="pexels" href="https://www.pexels.com/zh-tw/search/nature%20sky%20light/" onclick="forceOpenNewTab(event, this.href); return false;">📷 Pexels 免費圖庫</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Opacity & Fade Controls -->
+      <div class="sub-panel" style="margin-top:14px;">
+        <div class="grid-2" style="align-items:center;">
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label">
+              <span>歌詞頁底圖透明度</span>
+              <span id="lyricsOpacityVal">100%</span>
+            </label>
+            <input type="range" id="lyricsOpacity" min="10" max="100" value="100" />
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label">透明度基底（淡化 / 加深）</label>
+            <div class="pill-group" id="lyricsFadeBase">
+              <button type="button" class="pill-btn active" data-base="#ffffff">白底淡化 (#ffffff)</button>
+              <button type="button" class="pill-btn" data-base="#000000">黑底加深 (#000000)</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Smart Lyrics Mood & Keyword Recommendation Box -->
+      <div class="mood-panel" id="moodAnalysisBox">
+        <div class="mood-header">
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <strong style="color:var(--iris-deep); font-size:0.94rem;">🔮 歌詞意境關鍵字分析與智慧配色推薦</strong>
+            <span id="moodSummaryText" style="font-size:0.84rem; color:var(--text-muted);"></span>
+          </div>
+          <div class="input-row">
+            <button type="button" class="btn btn-secondary btn-sm" id="btnAnalyzeMood">🔍 重新分析意境</button>
+            <button type="button" class="btn btn-accent btn-sm" id="btnApplyRecommendedTheme">🎨 一鍵套用首選推薦風格</button>
+          </div>
+        </div>
+        <div id="moodKeywordsList" class="input-row" style="gap:6px; margin-bottom:6px;"></div>
+        <div id="moodThemeCards" class="theme-cards-row"></div>
+      </div>
+
+      <!-- STEP 01 Bottom: LINE Auto-External Share Bar -->
+      <div class="line-share-bar">
+        <div style="display:flex; flex-direction:column; gap:2px;">
+          <strong style="color:var(--iris-deep); font-size:0.92rem;">💜 分享給 LINE 同工好友（內建自動外開新網頁防呆）</strong>
+          <span style="font-size:0.8rem; color:var(--text-muted);">自動附帶 <code>?openExternalBrowser=1</code> 參數，好友從 LINE 點擊連結即可直接跳出至 Safari / Chrome 順暢下載 PPTX！</span>
+        </div>
+        <div class="input-row">
+          <button type="button" class="btn btn-line-direct btn-sm" id="btnShareLineSingle" style="padding:9px 16px; font-size:0.9rem;">💬 分享給 LINE 好友</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- STEP 02: Title Slide, Auto Lyrics Search/Clean/Chorus & Typography -->
+    <section class="step-card">
+      <div class="step-header">
+        <div class="step-badge-title">
+          <span class="step-num">STEP 02</span>
+          <h2 class="step-title">標題頁設定、歌詞自動斷句與副歌智慧整理</h2>
+        </div>
+        <label class="toggle-wrap">
+          <input type="checkbox" id="enableTitleSlide" checked />
+          <span>加上獨立標題頁</span>
+        </label>
+      </div>
+
+      <!-- Title Slide Enhanced Controls -->
+      <div id="titleSlideBox" class="sub-panel" style="margin-top:0; margin-bottom:16px;">
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label" for="songTitleInput">詩歌歌名（標題頁主標題）</label>
+            <input type="text" id="songTitleInput" value="奇異恩典" placeholder="輸入歌名，例如：奇異恩典" style="width:100%; display:block;" />
+            <div class="song-search-actions">
+              <button type="button" class="btn btn-accent btn-sm" id="btnAutoSearchLyrics">🔍 一鍵搜尋歌詞</button>
+              <a href="https://lyrics.kkbox.com/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" id="kkboxSearchBtn" data-external-search="kkbox" onclick="return window.forceOpenNewTab(event, 'https://lyrics.kkbox.com/');">🎵 KKBOX 搜尋</a>
+              <a href="https://www.google.com/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" id="googleSearchBtn" data-external-search="google" onclick="return window.forceOpenNewTab(event, 'https://www.google.com/');">🌐 Google 搜尋</a>
+            </div>
+            <div id="lyricsSearchStatus" class="status-note status-info"></div>
+            <div id="lyricsSearchChoices" class="pill-group" style="margin-top:6px;"></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">副標題 / 經文 / 出處（選填）</label>
+            <input type="text" id="songSubtitleInput" value="" placeholder="例如：傳統聖詩 / 約翰福音 3:16" />
+          </div>
+        </div>
+
+        <div class="grid-2" style="margin-top:4px;">
+          <div class="form-group">
+            <label class="form-label">
+              <span>標題頁「歌名」字級（明顯大於歌詞）</span>
+              <span id="titleFontSizeVal">80pt</span>
+            </label>
+            <input type="range" id="titleFontSize" min="40" max="120" value="80" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">
+              <span>標題頁「副標題」字級</span>
+              <span id="subtitleFontSizeVal">30pt</span>
+            </label>
+            <input type="range" id="subtitleFontSize" min="18" max="54" value="30" />
+          </div>
+        </div>
+
+        <!-- Independent Title Slide Background -->
+        <div class="form-group" style="margin-top:6px; margin-bottom:0;">
+          <label class="form-label">標題頁獨立背景（可單獨更換，不必和歌詞頁相同）</label>
+          <div class="seg-tabs" id="titleBgTabs" style="margin-bottom:10px;">
+            <button type="button" class="seg-btn active" data-mode="same">同歌詞頁背景</button>
+            <button type="button" class="seg-btn" data-mode="solid">獨立單色</button>
+            <button type="button" class="seg-btn" data-mode="gradient">獨立漸層</button>
+            <button type="button" class="seg-btn" data-mode="image">獨立圖片 / .PPTX</button>
+          </div>
+
+          <div id="titlePanelSame" style="font-size:0.85rem; color:var(--text-muted);">
+            目前標題頁將跟隨 STEP 01 的歌詞頁背景與透明度。
+          </div>
+
+          <div id="titlePanelSolid" class="hidden">
+            <div class="swatch-row">
+              <button type="button" class="swatch-btn active" style="background:#3a2359" data-color="#3a2359"></button>
+              <button type="button" class="swatch-btn" style="background:#523775" data-color="#523775"></button>
+              <button type="button" class="swatch-btn" style="background:#1c3144" data-color="#1c3144"></button>
+              <button type="button" class="swatch-btn" style="background:#4a5d23" data-color="#4a5d23"></button>
+              <button type="button" class="swatch-btn" style="background:#f5efe6" data-color="#f5efe6"></button>
+            </div>
+            <div class="input-row" style="margin-top:10px;">
+              <label class="form-label" for="titleSolidColor" style="margin:0;">自訂顏色：</label>
+              <input type="color" id="titleSolidColor" value="#3a2359" />
+            </div>
+          </div>
+
+          <div id="titlePanelGradient" class="hidden">
+            <div class="grid-2">
+              <div class="input-row">
+                <input type="color" id="titleGradC1" value="#3a2359" />
+                <input type="color" id="titleGradC2" value="#7b5aa6" />
+                <button type="button" class="btn btn-secondary btn-sm" id="titleGradSwap">⇄ 互換</button>
+              </div>
+              <div class="input-row">
+                <select id="titleGradAngle" style="width:auto; min-width:110px;">
+                  <option value="0">0°</option>
+                  <option value="45">45°</option>
+                  <option value="90">90°</option>
+                  <option value="135" selected>135°</option>
+                  <option value="180">180°</option>
+                </select>
+                <input type="range" id="titleGradRatio" min="15" max="85" value="50" style="flex:1;" />
+              </div>
+            </div>
+          </div>
+
+          <div id="titlePanelImage" class="hidden">
+            <label class="upload-box" for="titleFileInput" style="padding:12px;">
+              <div>上傳標題頁專用圖片（JPG / PNG / WebP）或 .pptx（取第 1 張底圖）</div>
+              <input type="file" id="titleFileInput" accept="image/jpeg,image/png,image/webp,.pptx" />
+            </label>
+            <div id="titleImgStatus" class="status-note status-info"></div>
+          </div>
+
+          <div id="titleOpacityRow" class="grid-2 hidden" style="margin-top:10px; align-items:center;">
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label">
+                <span>標題頁底圖透明度</span>
+                <span id="titleOpacityVal">100%</span>
+              </label>
+              <input type="range" id="titleOpacity" min="10" max="100" value="100" />
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label">標題頁透明度基底</label>
+              <div class="pill-group" id="titleFadeBase">
+                <button type="button" class="pill-btn active" data-base="#ffffff">白底淡化</button>
+                <button type="button" class="pill-btn" data-base="#000000">黑底加深</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Lyrics Input, Auto Segmentation & Smart Chorus Arrangement Tools -->
+      <div class="form-group">
+        <div class="form-label" style="flex-wrap:wrap; gap:8px;">
+          <span>歌詞內容（支援自動長句斷句、[主歌] / [副歌] 智慧偵測與重複段落整理）</span>
+          <div class="input-row">
+            <button type="button" class="btn btn-primary btn-sm" id="btnPasteClean">📋 貼上並自動斷句</button>
+            <button type="button" class="btn btn-secondary btn-sm" id="btnCleanLyrics">✨ 智慧去標點與長句斷句</button>
+            <button type="button" class="btn btn-secondary btn-sm" id="btnDetectChorus">🎶 智慧偵測副歌</button>
+            <button type="button" class="btn btn-secondary btn-sm" id="btnExpandChorus">🔁 自動穿插重複副歌</button>
+            <button type="button" class="btn btn-secondary btn-sm" id="btnDedupeLyrics">🧹 合併重複段落</button>
+            <button type="button" class="btn btn-secondary btn-sm" id="btnClearLyrics">清空</button>
+          </div>
+        </div>
+        <textarea id="lyricsInput">奇異恩典 何等甘甜
+我罪已得赦免
+前我失喪 今被尋回
+瞎眼今得看見
+
+如此恩典 使我敬畏
+使我心得安慰
+初信之時 即蒙恩惠
+真是何等寶貴</textarea>
+        <div id="chorusStatusBar" class="status-note status-info show"></div>
+      </div>
+
+      <!-- Splitting & Typography Controls -->
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">每頁句數分段</label>
+          <div class="pill-group" id="splitModeGroup">
+            <button type="button" class="pill-btn" data-split="1">1 句</button>
+            <button type="button" class="pill-btn active" data-split="2">2 句</button>
+            <button type="button" class="pill-btn" data-split="3">3 句</button>
+            <button type="button" class="pill-btn" data-split="4">4 句</button>
+            <button type="button" class="pill-btn" data-split="blank">依段落/空行分段</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">字體選擇</label>
+          <select id="fontFamilySelect">
+            <option value="Microsoft JhengHei" selected>微軟正黑體 (Microsoft JhengHei)</option>
+            <option value="DFKai-SB">標楷體 (DFKai-SB / 預覽搭配 LXGW WenKai)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">
+            <span>歌詞字級大小</span>
+            <span id="lyricsFontSizeVal">60pt</span>
+          </label>
+          <input type="range" id="lyricsFontSize" min="24" max="84" value="60" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">
+            <span>歌詞垂直位置（預設 14% 上方安全區）</span>
+            <span id="lyricsTopVal">14%</span>
+          </label>
+          <input type="range" id="lyricsTopPct" min="5" max="75" value="14" />
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">文字樣式、顏色與外框</label>
+          <div class="input-row">
+            <button type="button" class="pill-btn active" id="btnBold"><strong>B 粗體</strong></button>
+            <button type="button" class="pill-btn" id="btnItalic"><em>I 斜體</em></button>
+            <span style="display:inline-flex; align-items:center; gap:6px; margin-left:10px;">
+              <label class="form-label" for="textColorInput" style="margin:0;">文字顏色</label>
+              <input type="color" id="textColorInput" value="#ffffff" title="文字顏色" />
+            </span>
+          </div>
+          <div class="input-row" style="margin-top:6px;">
+            <label class="toggle-wrap" style="font-size:0.88rem;">
+              <input type="checkbox" id="enableStroke" />
+              <span>外框</span>
+            </label>
+            <input type="color" id="strokeColorInput" value="#2b1d3d" title="外框顏色" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">半透明底框（襯底）</label>
+          <div class="input-row">
+            <select id="backdropModeSelect" style="flex:1;">
+              <option value="none" selected>無底框</option>
+              <option value="fit">依文字寬度襯底</option>
+              <option value="full">滿版寬條襯底</option>
+            </select>
+            <input type="color" id="backdropColorInput" value="#ffffff" title="底框顏色" />
+            <input type="range" id="backdropOpacityInput" min="10" max="90" value="75" style="width:90px;" title="底框透明度" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- STEP 03: Live Preview & Export -->
+    <section class="step-card">
+      <div class="step-header">
+        <div class="step-badge-title">
+          <span class="step-num">STEP 03</span>
+          <h2 class="step-title">即時預覽與單頁微調（點擊卡片可拖曳調整）</h2>
+        </div>
+        <span id="slideCountBadge" style="font-size:0.88rem; font-weight:700; color:var(--iris-mid);">共 0 頁</span>
+      </div>
+
+      <div id="previewGrid" class="preview-grid"></div>
+
+      <div class="export-bar" style="margin-top:20px;">
+        <div>
+          <strong style="color:var(--iris-deep); font-size:1rem;">準備好匯出 16:9 PowerPoint (.pptx)</strong>
+          <div style="font-size:0.84rem; color:var(--text-muted);">全程於本機運算產生，精準對齊 16:9 寬螢幕座標與自適應文字框，確保不跑版</div>
+        </div>
+        <div class="input-row">
+          <button type="button" class="btn btn-accent" id="btnExportPptx" style="padding:12px 22px; font-size:1rem;">⬇ 匯出 .PPTX 簡報</button>
+        </div>
+      </div>
+
+      <div id="exportResultBar" class="status-note status-info" style="margin-top:12px;">
+        <span id="exportResultText"></span>
+        <a id="exportDirectLink" class="btn btn-primary btn-sm" download="worship-slides.pptx">點此再次下載 .PPTX</a>
+      </div>
+    </section>
+  </main>
+
+  <!-- Interactive Slide Tuning Modal -->
+  <div class="modal-backdrop" id="editModal">
+    <div class="modal-card">
+      <div class="step-header" style="margin-bottom:12px;">
+        <h3 class="step-title" id="modalSlideTitle">微調投影片</h3>
+        <button type="button" class="btn btn-secondary btn-sm" id="btnCloseModal">關閉</button>
+      </div>
+
+      <div class="modal-stage" id="modalStage">
+        <div class="slide-bg-layer" id="modalBgLayer"></div>
+        <div class="slide-fade-layer" id="modalFadeLayer"></div>
+        <div class="modal-drag-box" id="modalDragBox"></div>
+      </div>
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label"><span>水平位置 X</span><span id="mXVal">50%</span></label>
+          <input type="range" id="mX" min="15" max="85" value="50" />
+        </div>
+        <div class="form-group">
+          <label class="form-label"><span>垂直位置 Y</span><span id="mYVal">14%</span></label>
+          <input type="range" id="mY" min="5" max="80" value="14" />
+        </div>
+        <div class="form-group">
+          <label class="form-label"><span>此頁字級大小</span><span id="mSizeVal">44pt</span></label>
+          <input type="range" id="mSize" min="20" max="115" value="44" />
+        </div>
+        <div class="form-group">
+          <label class="form-label"><span>行距 / 字距</span><span id="mSpaceVal">1.35 / 0px</span></label>
+          <div class="input-row">
+            <input type="range" id="mLineHeight" min="100" max="200" value="135" style="flex:1;" />
+            <input type="range" id="mLetterSpace" min="0" max="12" value="0" style="flex:1;" />
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">編輯此頁文字</label>
+        <textarea id="mText" style="min-height:80px;"></textarea>
+      </div>
+
+      <div class="input-row" style="justify-content:flex-end;">
+        <button type="button" class="btn btn-secondary" id="btnResetModal">重設此頁</button>
+        <button type="button" class="btn btn-primary" id="btnSaveModal">套用並關閉</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    /* =========================================================================
+     * 1. BUILT-IN DATA: HYMN LIBRARY & MOOD THEMEPROFILES
+     * ========================================================================= */
+    const BUILTIN_HYMNS = {
+      "奇異恩典": "[主歌]\n奇異恩典 何等甘甜\n我罪已得赦免\n前我失喪 今被尋回\n瞎眼今得看見\n\n[副歌]\n如此恩典 使我敬畏\n使我心得安慰\n初信之時 即蒙恩惠\n真是何等寶貴",
+      "聖哉聖哉聖哉": "[主歌]\n聖哉 聖哉 聖哉\n全能大主宰\n清晨我心歡喜\n歌頌讚美你\n\n[副歌]\n聖哉 聖哉 聖哉\n慈悲全能主\n榮耀三一神\n永遠配得讚美",
+      "你真偉大": "[主歌]\n主啊我神 我每逢舉目觀看\n你手所造 一切奇妙大工\n看見星宿 又聽見隆隆雷聲\n你的大能 遍滿了宇宙中\n\n[副歌]\n我靈歌唱 讚美救主我神\n你真偉大 何等偉大\n我靈歌唱 讚美救主我神\n你真偉大 何等偉大",
+      "耶穌恩友": "[主歌]\n耶穌是我親愛朋友\n擔當我罪與憂愁\n何等權利能將萬事\n帶到主恩座前求\n\n[副歌]\n多少平安屢屢失去\n多少痛苦白白受\n皆因未將各樣事情\n帶到主恩座前求",
+      "平安夜": "[主歌]\n平安夜 聖善夜\n萬暗中 光華射\n照著聖母也照著聖嬰\n多少慈祥也多少天真\n\n[副歌]\n靜享天賜安眠\n靜享天賜安眠",
+      "amazing grace": "[Verse]\nAmazing grace how sweet the sound\nThat saved a wretch like me\n\n[Chorus]\nI once was lost but now am found\nWas blind but now I see"
+    };
+
+    const MOOD_THEMES = [
+      {
+        id: "grace-iris",
+        name: "恩典敬拜・尊貴鳶尾",
+        desc: "柔和深紫漸層，適合恩典、救贖、敬畏與十架詩歌",
+        keywords: ["恩典", "赦免", "寶貴", "敬畏", "十架", "十字架", "寶血", "救贖", "憐憫", "羔羊", "奇妙", "奇異", "聖潔", "尊貴", "榮美", "敬拜", "恩惠", "尋回", "罪", "grace", "cross", "mercy", "worthy"],
+        bgMode: "gradient",
+        color: "#523775",
+        gradC1: "#4a2e6e",
+        gradC2: "#8e6bb8",
+        gradAngle: 135,
+        gradRatio: 55,
+        titleMode: "solid",
+        titleColor: "#351e54",
+        textColor: "#ffffff",
+        enableStroke: false,
+        strokeColor: "#2b1d3d",
+        fontFamily: "Microsoft JhengHei",
+        photoQuery: "purple sky clouds light"
+      },
+      {
+        id: "glory-gold",
+        name: "榮耀頌讚・晨曦金光",
+        desc: "皇家深藍與暖金漸層，適合頌讚、君王、榮耀與得勝詩歌",
+        keywords: ["榮耀", "聖哉", "讚美", "歡呼", "歌頌", "歌唱", "全能", "偉大", "主宰", "君王", "寶座", "得勝", "哈利路亞", "光明", "清晨", "太陽", "興起", "發光", "大能", "歡喜", "glory", "praise", "king", "holy", "great"],
+        bgMode: "gradient",
+        color: "#22315c",
+        gradC1: "#1d2b53",
+        gradC2: "#8c5a2b",
+        gradAngle: 45,
+        gradRatio: 60,
+        titleMode: "gradient",
+        titleColor: "#141e3c",
+        titleGradC1: "#141e3c",
+        titleGradC2: "#6b4423",
+        textColor: "#fff8e7",
+        enableStroke: true,
+        strokeColor: "#1a2238",
+        fontFamily: "Microsoft JhengHei",
+        photoQuery: "golden sunrise sky clouds"
+      },
+      {
+        id: "peace-forest",
+        name: "平安安慰・靜謐森林",
+        desc: "溫潤橄欖與松綠漸層，適合安慰、牧者、醫治與交託詩歌",
+        keywords: ["平安", "安慰", "恩友", "朋友", "牧者", "草場", "溪水", "安歇", "倚靠", "憂愁", "擔當", "懷抱", "溫柔", "醫治", "盼望", "休息", "保護", "痛苦", "peace", "shepherd", "friend", "rest", "comfort"],
+        bgMode: "gradient",
+        color: "#3b5944",
+        gradC1: "#2c4738",
+        gradC2: "#608264",
+        gradAngle: 135,
+        gradRatio: 50,
+        titleMode: "solid",
+        titleColor: "#1f3629",
+        textColor: "#f7f6f0",
+        enableStroke: false,
+        strokeColor: "#1b2e23",
+        fontFamily: "Microsoft JhengHei",
+        photoQuery: "forest morning light mist"
+      },
+      {
+        id: "night-ocean",
+        name: "深海仰望・星夜交託",
+        desc: "靜謐深海夜藍漸層，適合仰望、星宿、帶領與夜間靈修詩歌",
+        keywords: ["平安夜", "聖善夜", "星宿", "星空", "宇宙", "黑夜", "夜晚", "風浪", "海洋", "仰望", "觀看", "帶領", "道路", "眼目", "看見", "永恆", "安眠", "禱告", "祈求", "night", "star", "ocean", "sky", "blind", "see"],
+        bgMode: "gradient",
+        color: "#1f3a52",
+        gradC1: "#13273a",
+        gradC2: "#315f85",
+        gradAngle: 135,
+        gradRatio: 55,
+        titleMode: "solid",
+        titleColor: "#0e1d2b",
+        textColor: "#ffffff",
+        enableStroke: false,
+        strokeColor: "#0e1d2b",
+        fontFamily: "Microsoft JhengHei",
+        photoQuery: "starry night sky ocean"
+      },
+      {
+        id: "warm-love",
+        name: "溫馨愛慕・暖陽米白",
+        desc: "典雅暖米白配深褐楷體，適合愛慕、感恩、甘甜與溫馨詩歌",
+        keywords: ["愛", "親愛", "慈愛", "感謝", "感恩", "喜樂", "甘甜", "幸福", "祝福", "溫暖", "同在", "天父", "阿爸", "慈祥", "天真", "love", "sweet", "joy", "thank", "father"],
+        bgMode: "gradient",
+        color: "#f5efe6",
+        gradC1: "#f5efe6",
+        gradC2: "#e3d3be",
+        gradAngle: 135,
+        gradRatio: 55,
+        titleMode: "solid",
+        titleColor: "#ebe0d0",
+        textColor: "#382417",
+        enableStroke: false,
+        strokeColor: "#ffffff",
+        fontFamily: "DFKai-SB",
+        photoQuery: "warm sunlight meadow field"
+      },
+      {
+        id: "revival-dawn",
+        name: "復興烈火・破曉紫紅",
+        desc: "熱情破曉酒紅漸層，適合聖靈、復興、呼召與宣教詩歌",
+        keywords: ["復興", "聖靈", "烈火", "燃燒", "能力", "差遣", "國度", "宣揚", "呼召", "勇敢", "爭戰", "自由", "釋放", "熱心", "spirit", "fire", "revival", "power", "free"],
+        bgMode: "gradient",
+        color: "#4a1c40",
+        gradC1: "#45183c",
+        gradC2: "#8f3b5b",
+        gradAngle: 135,
+        gradRatio: 50,
+        titleMode: "solid",
+        titleColor: "#301029",
+        textColor: "#ffffff",
+        enableStroke: false,
+        strokeColor: "#2b0d24",
+        fontFamily: "Microsoft JhengHei",
+        photoQuery: "dramatic sunset clouds sky"
+      }
+    ];
+
+    /* =========================================================================
+     * 2. APPLICATION STATE & HELPERS
+     * ========================================================================= */
+    const state = {
+      lyricsBg: {
+        mode: "solid",
+        color: "#523775",
+        gradC1: "#523775",
+        gradC2: "#9374b8",
+        gradAngle: 135,
+        gradRatio: 50,
+        imageDataUrl: null,
+        imageMime: "image/png",
+        imageExt: "png",
+        opacity: 100,
+        fadeBase: "#ffffff"
+      },
+      titleBg: {
+        mode: "same",
+        color: "#3a2359",
+        gradC1: "#3a2359",
+        gradC2: "#7b5aa6",
+        gradAngle: 135,
+        gradRatio: 50,
+        imageDataUrl: null,
+        imageMime: "image/png",
+        imageExt: "png",
+        opacity: 100,
+        fadeBase: "#ffffff"
+      },
+      enableTitleSlide: true,
+      songTitle: "奇異恩典",
+      songSubtitle: "",
+      titleFontSize: 80,
+      subtitleFontSize: 30,
+      splitMode: "2",
+      fontFamily: "Microsoft JhengHei",
+      lyricsFontSize: 60,
+      lyricsTopPct: 14,
+      bold: true,
+      italic: false,
+      textColor: "#ffffff",
+      enableStroke: false,
+      strokeColor: "#2b1d3d",
+      backdropMode: "none",
+      backdropColor: "#ffffff",
+      backdropOpacity: 75,
+      titleOverride: {},
+      overrides: {},
+      slides: [],
+      editingIdx: -1,
+      recommendedThemeId: "grace-iris"
+    };
+
+    const $ = (id) => document.getElementById(id);
+
+    function showToast(msg, duration = 3200) {
+      const t = $("toast");
+      t.textContent = msg;
+      t.classList.add("show");
+      clearTimeout(showToast._timer);
+      showToast._timer = setTimeout(() => t.classList.remove("show"), duration);
+    }
+
+    /* =========================================================================
+     * 2.5 LINE / IN-APP BROWSER FOOLPROOF DETECTION & ONE-CLICK SHARE
+     * ========================================================================= */
+    const LINE_EXTERNAL_SHARE_URL = "https://jennifer-worship-ppt.pages.dev/?openExternalBrowser=1";
+    const LINE_DIRECT_MSG_URI = "line://msg/text/" + encodeURIComponent(LINE_EXTERNAL_SHARE_URL);
+
+    function isLineInAppBrowser() {
+      const ua = navigator.userAgent || "";
+      return /Line\/|linesdk|micromessenger/i.test(ua);
+    }
+
+    function forceOpenExternalBrowser() {
+      window.location.href = window.location.href + (window.location.search ? '&' : '?') + 'openExternalBrowser=1';
+    }
+
+    function initLineInAppGuard() {
+      const overlay = $("lineGuardOverlay");
+      if (isLineInAppBrowser()) {
+        // 只要偵測到是從 LINE 內建瀏覽器打開，主動強制呼叫 openExternalBrowser=1 調用 Safari 或 Chrome 另開新網頁
+        if (!/[?&]openExternalBrowser=1\b/i.test(window.location.search)) {
+          forceOpenExternalBrowser();
+        }
+        if (overlay) {
+          overlay.classList.add("open");
+        }
+      }
+      const forceBtn = $("btnForceExternalInOverlay");
+      if (forceBtn) {
+        forceBtn.addEventListener("click", forceOpenExternalBrowser);
+      }
+      const dismissBtn = $("btnDismissLineOverlay");
+      if (dismissBtn && overlay) {
+        dismissBtn.addEventListener("click", () => {
+          overlay.classList.remove("open");
+        });
+      }
+      const copyInOverlayBtn = $("btnCopyUrlInOverlay");
+      if (copyInOverlayBtn) {
+        copyInOverlayBtn.addEventListener("click", copySiteShareUrl);
+      }
+      const singleShareBtn = $("btnShareLineSingle");
+      if (singleShareBtn) {
+        singleShareBtn.addEventListener("click", shareAndCopyForLine);
+      }
+    }
+
+    async function copyUrlToClipboard(shareUrl) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(shareUrl);
+      } else {
+        const tempInput = document.createElement("textarea");
+        tempInput.value = shareUrl;
+        tempInput.style.position = "fixed";
+        tempInput.style.opacity = "0";
+        document.body.appendChild(tempInput);
+        tempInput.focus();
+        tempInput.select();
+        document.execCommand("copy");
+        document.body.removeChild(tempInput);
+      }
+    }
+
+    async function shareAndCopyForLine() {
+      const shareUrl = LINE_EXTERNAL_SHARE_URL;
+      try {
+        await copyUrlToClipboard(shareUrl);
+      } catch {
+        // 即使剪貼簿權限受限仍繼續開啟 LINE 傳送
+      }
+      showToast("網址已複製！已開啟 LINE 傳送，請直接貼上發送給同工。", 4000);
+
+      // 優先透過 line://msg/text/ 開啟 LINE 傳送，若環境支援標準 Web Share API 亦可搭配呼叫
+      try {
+        window.location.href = LINE_DIRECT_MSG_URI;
+      } catch {
+        if (navigator.share) {
+          try {
+            await navigator.share({
+              title: "珍妮花的詩歌PPT輸入器",
+              url: shareUrl
+            });
+          } catch {}
+        }
+      }
+    }
+
+    async function copySiteShareUrl() {
+      const shareUrl = LINE_EXTERNAL_SHARE_URL;
+      try {
+        await copyUrlToClipboard(shareUrl);
+        showToast("網址已複製！已開啟 LINE 傳送，請直接貼上發送給同工。", 4000);
+      } catch {
+        prompt("請手動複製以下網址分享給 LINE 好友：", shareUrl);
+      }
+    }
+
+    /* =========================================================================
+     * 3. SMART LYRICS SEGMENTATION & CHORUS DETECTION / ARRANGEMENT ENGINE
+     * ========================================================================= */
+    const SECTION_HEADER_RE = /^(?:[\[\(【（\s]*(副歌|主歌|橋段|前奏|間奏|尾奏|結尾|chorus|refrain|verse|bridge|pre-?chorus|intro|outro|ending|tag|v\d+|c\d+|b\d+)[\s\dA-Za-z]*[\]\)】）:：]*|[※＊*]+\s*(?:副歌|chorus)?)$/i;
+    const META_NOISE_RE = /^(?:作詞|作曲|編曲|主唱|演唱|詞曲|製作|混音|和聲|版權|專輯|調性|速度|拍號|capo|key|bpm|op|sp)\s*[:：]/i;
+    const INLINE_CHORD_RE = /\[(?:[A-G][#b]?(?:m|maj|min|dim|aug|sus|add)?\d*(?:\/[A-G][#b]?)?)\]/g;
+
+    function classifySectionTag(line) {
+      const s = line.trim();
+      if (!SECTION_HEADER_RE.test(s)) return null;
+      if (/副歌|chorus|refrain|^\[?c\d*\]?$|[※＊]/i.test(s)) return "chorus";
+      if (/橋段|bridge|^\[?b\d*\]?$/i.test(s)) return "bridge";
+      return "verse";
+    }
+
+    // Break an overly long clause into projection-friendly short lines (ideal 6-13 CJK chars)
+    function splitLongClause(clause) {
+      const trimmed = clause.trim();
+      if (!trimmed) return [];
+
+      // If line contains spaces separating CJK phrases (e.g. "奇異恩典 何等甘甜" or "主啊我神 我每逢舉目觀看")
+      const hasCjk = /[\u4e00-\u9fff]/.test(trimmed);
+      if (hasCjk && trimmed.includes(" ")) {
+        const parts = trimmed.split(/\s+/).filter(Boolean);
+        // If total CJK length > 11 or parts >= 3, split into balanced sub-lines
+        const cjkCount = (trimmed.match(/[\u4e00-\u9fff]/g) || []).length;
+        if (cjkCount > 11 || parts.length >= 3) {
+          const out = [];
+          let buf = "";
+          for (const p of parts) {
+            const candidate = buf ? `${buf} ${p}` : p;
+            const candLen = (candidate.match(/[\u4e00-\u9fff]/g) || []).length;
+            if (buf && candLen > 11) {
+              out.push(buf);
+              buf = p;
+            } else {
+              buf = candidate;
+            }
+          }
+          if (buf) out.push(buf);
+          return out;
+        }
+      }
+
+      // If a continuous CJK clause without spaces is very long (> 15 chars), split near middle conjunction/particle
+      if (hasCjk && !trimmed.includes(" ") && trimmed.length > 15) {
+        const mid = Math.floor(trimmed.length / 2);
+        const breakChars = "的了在與和也又都就使讓向到從把將因";
+        let splitPos = -1;
+        for (let offset = 0; offset <= 4; offset++) {
+          if (mid + offset < trimmed.length - 3 && breakChars.includes(trimmed[mid + offset])) {
+            splitPos = mid + offset + 1;
+            break;
+          }
+          if (mid - offset > 3 && breakChars.includes(trimmed[mid - offset])) {
+            splitPos = mid - offset + 1;
+            break;
+          }
+        }
+        if (splitPos === -1) splitPos = mid;
+        return [trimmed.slice(0, splitPos).trim(), trimmed.slice(splitPos).trim()].filter(Boolean);
+      }
+
+      return [trimmed];
+    }
+
+    // Enhanced clean & auto-clause segmentation
+    function cleanAndSplitLyrics(raw) {
+      if (!raw) return "";
+      let text = raw
+        .replace(/\[\d{1,2}:\d{2}(?:\.\d{1,3})?\]/g, "") // strip LRC timestamps
+        .replace(INLINE_CHORD_RE, "")                    // strip inline chords like [G/B]
+        .replace(/[\u200B-\u200D\uFEFF]/g, "")           // strip zero-width spaces
+        .replace(/\u3000/g, " ")                         // normalize full-width spaces
+        .replace(/\r\n?/g, "\n");
+
+      const rawLines = text.split("\n");
+      const processed = [];
+
+      for (let line of rawLines) {
+        line = line.trim();
+        if (!line) {
+          processed.push("");
+          continue;
+        }
+        if (META_NOISE_RE.test(line)) continue;
+
+        // Preserve explicit section markers normalized to [主歌] / [副歌] / [橋段]
+        const secType = classifySectionTag(line);
+        if (secType) {
+          if (processed.length > 0 && processed[processed.length - 1] !== "") processed.push("");
+          processed.push(secType === "chorus" ? "[副歌]" : secType === "bridge" ? "[橋段]" : "[主歌]");
+          continue;
+        }
+
+        // Handle inline prefix like "副歌：..." or "1. ..."
+        const inlinePrefixMatch = line.match(/^(?:[\[\(【（]?(副歌|主歌|橋段|chorus|verse|bridge)\d*[\]\)】）]?[:：])\s*(.+)$/i);
+        if (inlinePrefixMatch) {
+          const pType = /副歌|chorus/i.test(inlinePrefixMatch[1]) ? "[副歌]" : /橋段|bridge/i.test(inlinePrefixMatch[1]) ? "[橋段]" : "[主歌]";
+          if (processed.length > 0 && processed[processed.length - 1] !== "") processed.push("");
+          processed.push(pType);
+          line = inlinePrefixMatch[2];
+        } else {
+          line = line.replace(/^(?:\d+[\.\、\)]|\([一二三四五六七八九十\d]+\))\s*/, "");
+        }
+
+        // Check for repeat suffix like (x2), x2, *2
+        let repeatCount = 1;
+        const repMatch = line.match(/(?:[\(\[（【]?\s*[xX×＊*]\s*([2-4])\s*[\)\]）】]?)$/);
+        if (repMatch) {
+          repeatCount = parseInt(repMatch[1], 10) || 1;
+          line = line.slice(0, repMatch.index).trim();
+        }
+
+        // Remove decorative brackets/quotes (keep English apostrophes like I'm)
+        line = line.replace(/[「」『』（）()\[\]【】《》<>""“”‘’`*#@~～]+/g, " ");
+
+        // Split sentence punctuation into separate lines
+        const clauses = line
+          .replace(/[，。、；：？！,.;:?!…—－\-·•\/｜|]+/g, "\n")
+          .split("\n")
+          .map(s => s.replace(/[ \t]+/g, " ").trim())
+          .filter(Boolean);
+
+        const expandedLines = [];
+        for (const c of clauses) {
+          expandedLines.push(...splitLongClause(c));
+        }
+
+        for (let r = 0; r < repeatCount; r++) {
+          processed.push(...expandedLines);
+        }
+      }
+
+      // Normalize consecutive blank lines (remove leading/trailing and collapse multiple blank lines)
+      const cleaned = [];
+      let prevBlank = false;
+      for (const l of processed) {
+        if (l === "") {
+          if (cleaned.length > 0 && !prevBlank) {
+            cleaned.push("");
+            prevBlank = true;
+          }
+        } else {
+          cleaned.push(l);
+          prevBlank = false;
+        }
+      }
+      while (cleaned.length > 0 && cleaned[cleaned.length - 1] === "") cleaned.pop();
+
+      // If pasted lyrics had spurious blank lines after almost every single line, collapse single-line gaps
+      const blocks = cleaned.join("\n").split("\n\n").map(b => b.split("\n").filter(Boolean));
+      const singleLineBlocks = blocks.filter(b => b.length === 1 && !classifySectionTag(b[0])).length;
+      if (blocks.length >= 3 && singleLineBlocks >= Math.ceil(blocks.length * 0.5)) {
+        return cleaned.filter(l => l !== "").join("\n");
+      }
+
+      return cleaned.join("\n");
+    }
+
+    // Parse lyrics into structured stanzas [{ type: 'verse'|'chorus'|'bridge'|null, lines: [...] }]
+    function parseStanzas(text) {
+      const rawLines = (text || "").split("\n").map(s => s.trim());
+      const stanzas = [];
+      let curType = null;
+      let curLines = [];
+
+      const flush = () => {
+        if (curLines.length > 0) {
+          stanzas.push({ type: curType, lines: curLines });
+          curLines = [];
+          curType = null;
+        }
+      };
+
+      for (const l of rawLines) {
+        if (!l) {
+          flush();
+          continue;
+        }
+        const sec = classifySectionTag(l);
+        if (sec) {
+          if (curLines.length > 0) flush();
+          curType = sec;
+          continue;
+        }
+        curLines.push(l);
+      }
+      flush();
+      return stanzas;
+    }
+
+    function stanzaSignature(lines) {
+      return lines.map(l => l.toLowerCase().replace(/\s+/g, "")).join("|");
+    }
+
+    function stanzaSimilarity(linesA, linesB) {
+      if (!linesA.length || !linesB.length) return 0;
+      const sigA = stanzaSignature(linesA);
+      const sigB = stanzaSignature(linesB);
+      if (sigA === sigB) return 1;
+      const setA = new Set(linesA.map(l => l.replace(/\s+/g, "")));
+      const setB = new Set(linesB.map(l => l.replace(/\s+/g, "")));
+      let common = 0;
+      for (const item of setA) if (setB.has(item)) common++;
+      return common / Math.max(setA.size, setB.size);
+    }
+
+    // Smart Chorus Detection: identifies chorus stanzas via explicit tags, repetition, or worship hook heuristics
+    function analyzeAndDetectChorus(autoTagInTextarea = false) {
+      const raw = $("lyricsInput").value;
+      const stanzas = parseStanzas(raw);
+      const statusEl = $("chorusStatusBar");
+
+      if (stanzas.length === 0) {
+        statusEl.className = "status-note status-info show";
+        statusEl.textContent = "請輸入歌詞以進行段落與副歌智慧分析。";
+        return { stanzas: [], chorusIdx: -1 };
+      }
+
+      // 1. Check if any stanza already has explicit [副歌] tag
+      let chorusIndices = stanzas.map((s, i) => s.type === "chorus" ? i : -1).filter(i => i >= 0);
+      let detectionMethod = "標籤識別";
+
+      // 2. If no explicit tag, find repeated stanzas (similarity >= 0.75)
+      if (chorusIndices.length === 0 && stanzas.length >= 2) {
+        const freqScores = new Array(stanzas.length).fill(0);
+        for (let i = 0; i < stanzas.length; i++) {
+          for (let j = i + 1; j < stanzas.length; j++) {
+            if (stanzaSimilarity(stanzas[i].lines, stanzas[j].lines) >= 0.75) {
+              freqScores[i]++;
+              freqScores[j]++;
+            }
+          }
+        }
+        const maxFreq = Math.max(...freqScores);
+        if (maxFreq > 0) {
+          chorusIndices = freqScores.map((f, idx) => f === maxFreq ? idx : -1).filter(i => i >= 0);
+          detectionMethod = "重複段落比對";
+        }
+      }
+
+      // 3. Heuristic fallback for 2+ stanzas when chorus is written only once (typically stanza #2 in V1-C-V2 or V1-C)
+      if (chorusIndices.length === 0 && stanzas.length >= 2) {
+        const CHORUS_HOOK_RE = /讚美|榮耀|哈利路亞|敬拜|高舉|歌唱|何等|永遠|全能|聖哉|愛你|恩典|安慰|寶貴|偉大|praise|glory|holy|forever|lord/i;
+        let bestIdx = 1;
+        let bestScore = -1;
+        stanzas.forEach((st, idx) => {
+          let score = idx === 1 ? 2 : 0; // Stanza 2 is standard chorus position
+          const joined = st.lines.join("\n");
+          const matches = joined.match(new RegExp(CHORUS_HOOK_RE.source, "gi")) || [];
+          score += matches.length * 1.5;
+          // Internal line repetition inside stanza is a strong chorus indicator
+          const uniqueLines = new Set(st.lines.map(l => l.replace(/\s+/g, "")));
+          if (uniqueLines.size < st.lines.length) score += 3;
+          if (score > bestScore) {
+            bestScore = score;
+            bestIdx = idx;
+          }
+        });
+        chorusIndices = [bestIdx];
+        detectionMethod = "曲式與副歌關鍵詞推論";
+      }
+
+      // Mark types on stanzas
+      const primaryChorusLines = chorusIndices.length > 0 ? stanzas[chorusIndices[0]].lines : null;
+      stanzas.forEach((st, idx) => {
+        if (chorusIndices.includes(idx) || (primaryChorusLines && stanzaSimilarity(st.lines, primaryChorusLines) >= 0.75)) {
+          st.type = "chorus";
+        } else if (!st.type) {
+          st.type = "verse";
+        }
+      });
+
+      if (autoTagInTextarea) {
+        $("lyricsInput").value = serializeStanzas(stanzas);
+      }
+
+      const verseCount = stanzas.filter(s => s.type === "verse").length;
+      const chorusCount = stanzas.filter(s => s.type === "chorus").length;
+      const bridgeCount = stanzas.filter(s => s.type === "bridge").length;
+      const chorusPreview = primaryChorusLines ? `「${primaryChorusLines[0].slice(0, 14)}${primaryChorusLines[0].length > 14 ? "…" : ""}」` : "無";
+
+      statusEl.className = "status-note status-info show";
+      statusEl.innerHTML = `<span>🎶 <strong>曲式結構分析（${detectionMethod}）：</strong>共 ${stanzas.length} 段（主歌 ${verseCount} 段、副歌 ${chorusCount} 段${bridgeCount ? `、橋段 ${bridgeCount} 段` : ""}）｜副歌首句：${chorusPreview}</span>`;
+
+      return { stanzas, chorusIndices, primaryChorusLines };
+    }
+
+    function serializeStanzas(stanzas) {
+      return stanzas.map(st => {
+        const tag = st.type === "chorus" ? "[副歌]" : st.type === "bridge" ? "[橋段]" : "[主歌]";
+        return `${tag}\n${st.lines.join("\n")}`;
+      }).join("\n\n");
+    }
+
+    // Automatically interleave Chorus after each Verse (V1 -> C -> V2 -> C...)
+    function expandChorusRepeats() {
+      const cleaned = cleanAndSplitLyrics($("lyricsInput").value);
+      $("lyricsInput").value = cleaned;
+      const { stanzas, primaryChorusLines } = analyzeAndDetectChorus(false);
+      if (!primaryChorusLines || stanzas.length < 2) {
+        showToast("需至少包含主歌與副歌兩個段落才能自動穿插副歌");
+        return;
+      }
+
+      const expanded = [];
+      for (let i = 0; i < stanzas.length; i++) {
+        const cur = stanzas[i];
+        expanded.push(cur);
+        // If current is a verse and next stanza is NOT already a chorus, insert chorus
+        const next = stanzas[i + 1];
+        if (cur.type === "verse" && (!next || next.type !== "chorus")) {
+          // Only append after final verse if there were multiple verses or user wants V-C cycle
+          if (next || stanzas.filter(s => s.type === "verse").length >= 2 || expanded.filter(s => s.type === "chorus").length === 0) {
+            expanded.push({ type: "chorus", lines: [...primaryChorusLines] });
+          }
+        }
+      }
+
+      $("lyricsInput").value = serializeStanzas(expanded);
+      state.overrides = {};
+      analyzeAndDetectChorus(false);
+      renderPreview();
+      showToast("已自動依「主歌 → 副歌」曲式穿插並標記副歌段落！");
+    }
+
+    // Merge consecutive duplicate lines or duplicate consecutive stanzas
+    function dedupeRepeatedStanzas() {
+      const cleaned = cleanAndSplitLyrics($("lyricsInput").value);
+      const stanzas = parseStanzas(cleaned);
+      if (stanzas.length === 0) return;
+
+      const deduped = [];
+      for (const st of stanzas) {
+        // Also collapse consecutive identical lines inside a stanza if all lines were doubled
+        const prev = deduped[deduped.length - 1];
+        if (prev && stanzaSimilarity(prev.lines, st.lines) >= 0.9) {
+          continue;
+        }
+        deduped.push(st);
+      }
+
+      const hasExplicitTags = /\[(副歌|主歌|橋段)\]/.test($("lyricsInput").value);
+      $("lyricsInput").value = hasExplicitTags
+        ? serializeStanzas(deduped)
+        : deduped.map(s => s.lines.join("\n")).join("\n\n");
+
+      state.overrides = {};
+      analyzeAndDetectChorus(false);
+      renderPreview();
+      showToast("已合併連續重複的歌詞段落！");
+    }
+
+    /* =========================================================================
+     * 4. LYRICS MOOD KEYWORD ANALYZER & THEME RECOMMENDER
+     * ========================================================================= */
+    function analyzeLyricsMood() {
+      const corpus = `${state.songTitle} ${state.songSubtitle} ${$("lyricsInput").value}`.toLowerCase();
+      const scored = MOOD_THEMES.map(theme => {
+        const matched = [];
+        let score = 0;
+        for (const kw of theme.keywords) {
+          const escaped = kw.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+          const matches = corpus.match(new RegExp(escaped, "gi"));
+          if (matches && matches.length > 0) {
+            score += matches.length * (kw.length >= 2 ? 2 : 1);
+            matched.push({ kw, count: matches.length });
+          }
+        }
+        return { theme, score, matched };
+      });
+
+      scored.sort((a, b) => b.score - a.score);
+      const top = scored[0];
+      state.recommendedThemeId = top.theme.id;
+
+      // Render matched keywords
+      const kwContainer = $("moodKeywordsList");
+      kwContainer.innerHTML = "";
+      const allMatched = [];
+      scored.forEach(s => s.matched.forEach(m => {
+        if (!allMatched.some(x => x.kw === m.kw)) allMatched.push(m);
+      }));
+
+      if (allMatched.length > 0) {
+        allMatched.slice(0, 8).forEach(m => {
+          const span = document.createElement("span");
+          span.className = "mood-kw-tag";
+          span.textContent = m.count > 1 ? `#${m.kw} ×${m.count}` : `#${m.kw}`;
+          kwContainer.appendChild(span);
+        });
+        $("moodSummaryText").textContent = `偵測到 ${allMatched.length} 個意境關鍵字，首選推薦「${top.theme.name}」`;
+      } else {
+        $("moodSummaryText").textContent = `未偵測到特定關鍵字，推薦百搭經典「${top.theme.name}」`;
+      }
+
+      // Render top 3 theme cards
+      const cardsContainer = $("moodThemeCards");
+      cardsContainer.innerHTML = "";
+      scored.slice(0, 3).forEach((item, idx) => {
+        const t = item.theme;
+        const card = document.createElement("button");
+        card.type = "button";
+        card.className = "theme-rec-card" + (idx === 0 ? " recommended" : "");
+
+        const swatch = document.createElement("div");
+        swatch.className = "theme-swatch-preview";
+        swatch.style.background = `linear-gradient(${t.gradAngle}deg, ${t.gradC1}, ${t.gradC2})`;
+        swatch.style.color = t.textColor;
+        swatch.textContent = "詩";
+
+        const info = document.createElement("div");
+        info.className = "theme-rec-info";
+        info.innerHTML = `
+          <div class="theme-rec-title">
+            <span>${t.name}</span>
+            ${idx === 0 ? '<span class="rec-badge">首選推薦</span>' : ""}
+          </div>
+          <div class="theme-rec-desc" title="${t.desc}">${t.desc}</div>
+        `;
+
+        card.appendChild(swatch);
+        card.appendChild(info);
+        card.addEventListener("click", () => applyMoodTheme(t.id));
+        cardsContainer.appendChild(card);
+      });
+    }
+
+    function applyMoodTheme(themeId) {
+      const theme = MOOD_THEMES.find(t => t.id === (themeId || state.recommendedThemeId)) || MOOD_THEMES[0];
+
+      // Only update colors (background colors, text color, stroke color) - NEVER touch font size, font family, or X/Y positions
+      state.lyricsBg.mode = theme.bgMode;
+      state.lyricsBg.color = theme.color;
+      state.lyricsBg.gradC1 = theme.gradC1;
+      state.lyricsBg.gradC2 = theme.gradC2;
+      state.lyricsBg.gradAngle = theme.gradAngle;
+      state.lyricsBg.gradRatio = theme.gradRatio;
+      state.lyricsBg.opacity = 100;
+
+      $("lyricsSolidColor").value = theme.color;
+      $("lyricsGradC1").value = theme.gradC1;
+      $("lyricsGradC2").value = theme.gradC2;
+      $("lyricsGradAngle").value = String(theme.gradAngle);
+      $("lyricsGradAngleVal").textContent = theme.gradAngle + "°";
+      $("lyricsGradRatio").value = String(theme.gradRatio);
+      $("lyricsGradRatioVal").textContent = theme.gradRatio + "%";
+      $("lyricsOpacity").value = "100";
+      $("lyricsOpacityVal").textContent = "100%";
+
+      // Update Title Slide Background Colors
+      state.titleBg.mode = theme.titleMode;
+      state.titleBg.color = theme.titleColor;
+      state.titleBg.gradC1 = theme.titleGradC1 || theme.gradC1;
+      state.titleBg.gradC2 = theme.titleGradC2 || theme.gradC2;
+      state.titleBg.opacity = 100;
+      $("titleSolidColor").value = theme.titleColor;
+      $("titleGradC1").value = state.titleBg.gradC1;
+      $("titleGradC2").value = state.titleBg.gradC2;
+
+      // Update Text & Stroke Colors only (preserve user's font size, vertical position, and font family)
+      state.textColor = theme.textColor;
+      state.enableStroke = theme.enableStroke;
+      state.strokeColor = theme.strokeColor;
+
+      $("textColorInput").value = theme.textColor;
+      $("enableStroke").checked = theme.enableStroke;
+      $("strokeColorInput").value = theme.strokeColor;
+      $("onlinePhotoQuery").value = theme.photoQuery;
+      syncStockPhotoLinks();
+
+      setLyricsBgMode(theme.bgMode);
+      setTitleBgMode(theme.titleMode);
+      updateBackgroundAndColorOnly();
+      showToast(`已套用「${theme.name}」主題配色（字級與位置保持不變）！`);
+    }
+
+    /* =========================================================================
+     * 5. SLIDE COMPUTATION & PREVIEW RENDERING
+     * ========================================================================= */
+    function buildTitleSlideObject() {
+      const ov = state.titleOverride || {};
+      const defaultTitleText = (state.songTitle.trim() || "未命名詩歌") +
+        (state.songSubtitle.trim() ? "\n" + state.songSubtitle.trim() : "");
+      return {
+        isTitle: true,
+        lyricIdx: -1,
+        section: "title",
+        text: ov.text !== undefined ? ov.text : defaultTitleText,
+        xPct: ov.xPct ?? 50,
+        yPct: ov.yPct ?? 50,
+        fontSize: ov.fontSize ?? state.titleFontSize,
+        subtitleSize: state.subtitleFontSize,
+        lineHeight: ov.lineHeight ?? 1.25,
+        letterSpacing: ov.letterSpacing ?? 2
+      };
+    }
+
+    function computeSlides() {
+      const slides = [];
+      if (state.enableTitleSlide) {
+        slides.push(buildTitleSlideObject());
+      }
+
+      const { stanzas } = analyzeAndDetectChorus(false);
+      const chunks = [];
+
+      if (state.splitMode === "blank") {
+        stanzas.forEach(st => {
+          const validLines = st.lines.map(l => l.replace(/[\u3000\s]+/g, " ").trim()).filter(Boolean);
+          if (validLines.length) {
+            chunks.push({ text: validLines.join("\n"), section: st.type || "verse" });
+          }
+        });
+      } else {
+        const n = parseInt(state.splitMode, 10) || 2;
+        // Ignore all blank lines across the entire lyrics input so every slide strictly receives n non-empty lyric lines
+        const allLyricLines = [];
+        stanzas.forEach(st => {
+          st.lines.forEach(line => {
+            const cleanLine = line.replace(/[\u3000\s]+/g, " ").trim();
+            if (cleanLine && !classifySectionTag(cleanLine)) {
+              allLyricLines.push({ text: cleanLine, section: st.type || "verse" });
+            }
+          });
+        });
+        for (let i = 0; i < allLyricLines.length; i += n) {
+          const group = allLyricLines.slice(i, i + n);
+          const section = group.some(item => item.section === "chorus")
+            ? "chorus"
+            : (group[0]?.section || "verse");
+          chunks.push({
+            text: group.map(item => item.text).join("\n"),
+            section
+          });
+        }
+      }
+
+      chunks.forEach((chunkObj, lyricIdx) => {
+        const ov = state.overrides[lyricIdx] || {};
+        slides.push({
+          isTitle: false,
+          lyricIdx,
+          section: chunkObj.section,
+          text: ov.text !== undefined ? ov.text : chunkObj.text,
+          xPct: ov.xPct ?? 50,
+          yPct: ov.yPct ?? state.lyricsTopPct,
+          fontSize: ov.fontSize ?? state.lyricsFontSize,
+          lineHeight: ov.lineHeight ?? 1.35,
+          letterSpacing: ov.letterSpacing ?? 0
+        });
+      });
+
+      state.slides = slides;
+    }
+
+    function getEffectiveBg(isTitle) {
+      return (isTitle && state.titleBg.mode !== "same") ? state.titleBg : state.lyricsBg;
+    }
+
+    function applyBgToElements(bgLayer, fadeLayer, bgCfg) {
+      bgLayer.style.backgroundImage = "";
+      bgLayer.style.backgroundColor = "";
+      if (bgCfg.mode === "solid") {
+        bgLayer.style.backgroundColor = bgCfg.color;
+      } else if (bgCfg.mode === "gradient") {
+        bgLayer.style.backgroundImage = `linear-gradient(${bgCfg.gradAngle}deg, ${bgCfg.gradC1} 0%, ${bgCfg.gradC2} ${bgCfg.gradRatio}%, ${bgCfg.gradC2} 100%)`;
+      } else if ((bgCfg.mode === "image" || bgCfg.mode === "online") && bgCfg.imageDataUrl) {
+        bgLayer.style.backgroundImage = `url("${bgCfg.imageDataUrl}")`;
+      } else {
+        bgLayer.style.backgroundColor = "#523775";
+      }
+
+      const alpha = 1 - bgCfg.opacity / 100;
+      fadeLayer.style.backgroundColor = bgCfg.fadeBase;
+      fadeLayer.style.opacity = alpha.toFixed(2);
+    }
+
+    function getPreviewFontCss() {
+      return state.fontFamily === "DFKai-SB"
+        ? '"DFKai-SB", "標楷體", "LXGW WenKai TC", serif'
+        : '"Microsoft JhengHei", "Noto Sans TC", sans-serif';
+    }
+
+    function hexToRgba(hex, opacityPct) {
+      const h = (hex || "#ffffff").replace("#", "");
+      const r = parseInt(h.substring(0, 2), 16) || 255;
+      const g = parseInt(h.substring(2, 4), 16) || 255;
+      const b = parseInt(h.substring(4, 6), 16) || 255;
+      return `rgba(${r}, ${g}, ${b}, ${(opacityPct / 100).toFixed(2)})`;
+    }
+
+    function renderSlideBoxContent(boxEl, slide, scaleFactor) {
+      boxEl.innerHTML = "";
+      const safeX = slide.xPct ?? 50;
+      const safeY = slide.isTitle ? (slide.yPct ?? 50) : (slide.yPct ?? state.lyricsTopPct);
+      boxEl.style.left = safeX + "%";
+      boxEl.style.top = safeY + "%";
+      boxEl.style.bottom = "auto";
+      boxEl.style.transform = slide.isTitle ? "translate(-50%, -50%)" : "translate(-50%, 0)";
+      boxEl.style.fontFamily = getPreviewFontCss();
+      boxEl.style.fontWeight = state.bold ? "700" : "400";
+      boxEl.style.fontStyle = state.italic ? "italic" : "normal";
+      boxEl.style.color = state.textColor;
+      boxEl.style.lineHeight = slide.lineHeight;
+      boxEl.style.letterSpacing = (slide.letterSpacing * scaleFactor).toFixed(1) + "px";
+
+      if (state.enableStroke) {
+        const w = Math.max(0.8, 2.2 * scaleFactor).toFixed(1);
+        boxEl.style.webkitTextStroke = `${w}px ${state.strokeColor}`;
+        boxEl.style.paintOrder = "stroke fill";
+      } else {
+        boxEl.style.webkitTextStroke = "0px transparent";
+      }
+
+      if (state.backdropMode === "full") {
+        boxEl.style.width = "100%";
+        boxEl.style.padding = `${8 * scaleFactor}px ${16 * scaleFactor}px`;
+        boxEl.style.backgroundColor = hexToRgba(state.backdropColor, state.backdropOpacity);
+        boxEl.style.borderRadius = "0px";
+      } else if (state.backdropMode === "fit") {
+        boxEl.style.width = "auto";
+        boxEl.style.maxWidth = "90%";
+        boxEl.style.padding = `${8 * scaleFactor}px ${18 * scaleFactor}px`;
+        boxEl.style.backgroundColor = hexToRgba(state.backdropColor, state.backdropOpacity);
+        boxEl.style.borderRadius = `${6 * scaleFactor}px`;
+      } else {
+        boxEl.style.width = "88%";
+        boxEl.style.padding = "0";
+        boxEl.style.backgroundColor = "transparent";
+      }
+
+      const lines = slide.text.split("\n");
+      if (slide.isTitle) {
+        const titleDiv = document.createElement("div");
+        titleDiv.style.fontSize = (slide.fontSize * scaleFactor).toFixed(2) + "px";
+        titleDiv.textContent = lines[0] || "";
+        boxEl.appendChild(titleDiv);
+
+        if (lines.length > 1 && lines.slice(1).join("").trim() !== "") {
+          const subDiv = document.createElement("div");
+          subDiv.style.fontSize = (state.subtitleFontSize * scaleFactor).toFixed(2) + "px";
+          subDiv.style.marginTop = (10 * scaleFactor).toFixed(1) + "px";
+          subDiv.style.opacity = "0.92";
+          subDiv.textContent = lines.slice(1).join("\n");
+          boxEl.appendChild(subDiv);
+        }
+      } else {
+        // Strictly lock lyric font size to slide.fontSize (from lyricsFontSize slider) with zero character-count scaling
+        boxEl.style.fontSize = (slide.fontSize * scaleFactor).toFixed(2) + "px";
+        lines.forEach((l, i) => {
+          if (i > 0) boxEl.appendChild(document.createElement("br"));
+          boxEl.appendChild(document.createTextNode(l));
+        });
+      }
+    }
+
+    // Strictly update ONLY background layers (.slide-bg-layer & .slide-fade-layer) without touching text position (X/Y) or font size (pt)
+    function updateBackgroundLayersOnly() {
+      const grid = $("previewGrid");
+      if (!grid || !state.slides.length || grid.children.length !== state.slides.length) {
+        renderPreview();
+        return;
+      }
+      const cards = grid.querySelectorAll(".slide-card");
+      cards.forEach((card, idx) => {
+        const slide = state.slides[idx];
+        if (!slide) return;
+        const bgLayer = card.querySelector(".slide-bg-layer");
+        const fadeLayer = card.querySelector(".slide-fade-layer");
+        if (bgLayer && fadeLayer) {
+          applyBgToElements(bgLayer, fadeLayer, getEffectiveBg(slide.isTitle));
+        }
+      });
+    }
+
+    // Strictly update ONLY background layers and text/stroke colors without touching font size or X/Y coordinates
+    function updateBackgroundAndColorOnly() {
+      const grid = $("previewGrid");
+      if (!grid || !state.slides.length || grid.children.length !== state.slides.length) {
+        renderPreview();
+        return;
+      }
+      const cardW = grid.clientWidth > 540 ? 280 : Math.max(220, grid.clientWidth - 32);
+      const scale = cardW / 960;
+      const cards = grid.querySelectorAll(".slide-card");
+      cards.forEach((card, idx) => {
+        const slide = state.slides[idx];
+        if (!slide) return;
+        const bgLayer = card.querySelector(".slide-bg-layer");
+        const fadeLayer = card.querySelector(".slide-fade-layer");
+        if (bgLayer && fadeLayer) {
+          applyBgToElements(bgLayer, fadeLayer, getEffectiveBg(slide.isTitle));
+        }
+        const textBox = card.querySelector(".slide-text-box");
+        if (textBox) {
+          textBox.style.color = state.textColor;
+          if (state.enableStroke) {
+            const w = Math.max(0.8, 2.2 * scale).toFixed(1);
+            textBox.style.webkitTextStroke = `${w}px ${state.strokeColor}`;
+            textBox.style.paintOrder = "stroke fill";
+          } else {
+            textBox.style.webkitTextStroke = "0px transparent";
+          }
+        }
+      });
+    }
+
+    function updateTitleSlideOnly() {
+      analyzeLyricsMood();
+      if (!state.enableTitleSlide) return;
+      const grid = $("previewGrid");
+      const firstCard = grid ? grid.querySelector(".slide-card") : null;
+      if (!firstCard || !state.slides.length || !state.slides[0].isTitle) {
+        renderPreview();
+        return;
+      }
+
+      const titleSlide = buildTitleSlideObject();
+      state.slides[0] = titleSlide;
+
+      const stage = firstCard.querySelector(".slide-stage-wrap");
+      const fallbackW = grid.clientWidth > 540 ? 280 : Math.max(220, grid.clientWidth - 32);
+      const cardW = (stage && stage.clientWidth > 0) ? stage.clientWidth : fallbackW;
+      const scale = cardW / 960;
+
+      const bgLayer = firstCard.querySelector(".slide-bg-layer");
+      const fadeLayer = firstCard.querySelector(".slide-fade-layer");
+      const textBox = firstCard.querySelector(".slide-text-box");
+      const footerHint = firstCard.querySelector(".slide-card-footer > span:last-child");
+
+      if (bgLayer && fadeLayer) {
+        applyBgToElements(bgLayer, fadeLayer, getEffectiveBg(true));
+      }
+      if (textBox) {
+        renderSlideBoxContent(textBox, titleSlide, scale);
+      }
+      if (footerHint) {
+        footerHint.textContent = `${titleSlide.fontSize}pt · 點擊微調`;
+      }
+    }
+
+    function renderPreview() {
+      computeSlides();
+      analyzeLyricsMood();
+      const grid = $("previewGrid");
+      grid.innerHTML = "";
+      $("slideCountBadge").textContent = `共 ${state.slides.length} 頁`;
+
+      const fallbackW = grid.clientWidth > 540 ? 280 : Math.max(220, grid.clientWidth - 32);
+
+      state.slides.forEach((slide, idx) => {
+        const card = document.createElement("div");
+        card.className = "slide-card" + (slide.section === "chorus" ? " is-chorus-card" : "");
+        card.addEventListener("click", () => openEditModal(idx));
+
+        const stage = document.createElement("div");
+        stage.className = "slide-stage-wrap";
+
+        const bgLayer = document.createElement("div");
+        bgLayer.className = "slide-bg-layer";
+        const fadeLayer = document.createElement("div");
+        fadeLayer.className = "slide-fade-layer";
+        applyBgToElements(bgLayer, fadeLayer, getEffectiveBg(slide.isTitle));
+
+        const textBox = document.createElement("div");
+        textBox.className = "slide-text-box";
+
+        stage.appendChild(bgLayer);
+        stage.appendChild(fadeLayer);
+        stage.appendChild(textBox);
+
+        const footer = document.createElement("div");
+        footer.className = "slide-card-footer";
+        const label = document.createElement("span");
+        if (slide.isTitle) {
+          label.innerHTML = `<span class="badge-title-slide">標題頁</span> 第 1 頁`;
+        } else if (slide.section === "chorus") {
+          label.innerHTML = `<span class="badge-chorus-slide">副歌</span> 第 ${idx + 1} 頁`;
+        } else if (slide.section === "bridge") {
+          label.innerHTML = `<span class="badge-verse-slide">橋段</span> 第 ${idx + 1} 頁`;
+        } else {
+          label.innerHTML = `<span class="badge-verse-slide">主歌</span> 第 ${idx + 1} 頁`;
+        }
+        const hint = document.createElement("span");
+        hint.textContent = `${slide.fontSize}pt · 點擊微調`;
+        footer.appendChild(label);
+        footer.appendChild(hint);
+
+        card.appendChild(stage);
+        card.appendChild(footer);
+        grid.appendChild(card);
+
+        const actualW = stage.clientWidth > 0 ? stage.clientWidth : fallbackW;
+        renderSlideBoxContent(textBox, slide, actualW / 960);
+      });
+    }
+
+    /* =========================================================================
+     * 6. 16:9 PPTX OOXML GENERATOR (LOCKED FONT SIZE & POSITION ENGINE)
+     * ========================================================================= */
+    const SLIDE_W_PT = 960;
+    const SLIDE_H_PT = 540;
+    const EMU_PER_PT = 12700; // 960pt * 12700 = 12192000 EMU, 540pt * 12700 = 6858000 EMU
+
+    function xmlEsc(str) {
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&apos;");
+    }
+
+    function hexNoHash(hex) {
+      return (hex || "#FFFFFF").replace("#", "").toUpperCase();
+    }
+
+    function blendColor(hex, baseHex, opacityPct) {
+      const a = opacityPct / 100;
+      const parse = (h) => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+      const [r1, g1, b1] = parse(hex);
+      const [r2, g2, b2] = parse(baseHex);
+      const mix = (c1, c2) => Math.round(c1 * a + c2 * (1 - a)).toString(16).padStart(2, "0");
+      return (mix(r1, r2) + mix(g1, g2) + mix(b1, b2)).toUpperCase();
+    }
+
+    // Estimate visual line width in points for fit-backdrop mode
+    function estimateLineWidthPt(line, fontSizePt, letterSpacingPt) {
+      let w = 0;
+      for (const ch of line) {
+        if (ch === " ") w += fontSizePt * 0.35;
+        else if (/[\u0000-\u00ff]/.test(ch)) w += fontSizePt * 0.58;
+        else w += fontSizePt * 1.04;
+      }
+      if (line.length > 1 && letterSpacingPt) {
+        w += (line.length - 1) * letterSpacingPt;
+      }
+      return w;
+    }
+
+    // Compute exact 16:9 EMU geometry for a slide text box (locking lyric top position & font size)
+    function computePptxBoxEmu(slide) {
+      const lines = slide.text.split("\n");
+      const maxUsableW = SLIDE_W_PT * 0.90; // 864pt
+
+      let maxLineW = 0;
+      let totalVisualH = 0;
+
+      if (slide.isTitle) {
+        const titleLine = lines[0] || "";
+        const tw = estimateLineWidthPt(titleLine, slide.fontSize, slide.letterSpacing);
+        maxLineW = Math.max(maxLineW, tw);
+        const wrappedTitleLines = Math.max(1, Math.ceil(tw / maxUsableW));
+        totalVisualH += wrappedTitleLines * slide.fontSize * slide.lineHeight;
+
+        const subLines = lines.slice(1).filter(l => l.trim() !== "");
+        if (subLines.length > 0) {
+          totalVisualH += 14;
+          for (const sl of subLines) {
+            const sw = estimateLineWidthPt(sl, state.subtitleFontSize, 0);
+            maxLineW = Math.max(maxLineW, sw);
+            const wrappedSub = Math.max(1, Math.ceil(sw / maxUsableW));
+            totalVisualH += wrappedSub * state.subtitleFontSize * 1.35;
+          }
+        }
+      } else {
+        for (const l of lines) {
+          const lw = estimateLineWidthPt(l, slide.fontSize, slide.letterSpacing);
+          maxLineW = Math.max(maxLineW, lw);
+          const wrapped = Math.max(1, Math.ceil(lw / maxUsableW));
+          totalVisualH += wrapped * slide.fontSize * slide.lineHeight;
+        }
+      }
+
+      let wPt;
+      if (state.backdropMode === "full") {
+        wPt = SLIDE_W_PT;
+      } else if (state.backdropMode === "fit") {
+        wPt = Math.min(SLIDE_W_PT * 0.92, Math.max(200, maxLineW + 44));
+      } else {
+        wPt = SLIDE_W_PT * 0.88;
+      }
+
+      const hPt = Math.min(SLIDE_H_PT * 0.92, Math.max(slide.fontSize * 1.45, totalVisualH + 24));
+
+      let xPt = state.backdropMode === "full"
+        ? 0
+        : (slide.xPct / 100) * SLIDE_W_PT - wPt / 2;
+      xPt = Math.max(0, Math.min(SLIDE_W_PT - wPt, xPt));
+
+      let yPt;
+      if (slide.isTitle) {
+        yPt = (slide.yPct / 100) * SLIDE_H_PT - hPt / 2;
+        yPt = Math.max(0, Math.min(SLIDE_H_PT - hPt, yPt));
+      } else {
+        // Strictly lock lyric slide top coordinate to slide.yPct% without shifting by line/character count
+        yPt = (slide.yPct / 100) * SLIDE_H_PT;
+      }
+
+      return {
+        x: Math.round(xPt * EMU_PER_PT),
+        y: Math.round(yPt * EMU_PER_PT),
+        cx: Math.round(wPt * EMU_PER_PT),
+        cy: Math.round(hPt * EMU_PER_PT)
+      };
+    }
+
+    async function exportPptx() {
+      if (isLineInAppBrowser()) {
+        alert("⚠️ 偵測到您目前在 LINE 內建瀏覽器中，可能無法下載檔案。若下載失敗，請點選右上角 ... 選擇『在外部瀏覽器開啟』後再試一次！");
+      }
+      if (typeof JSZip === "undefined") {
+        showToast("JSZip 尚未載入完成，請稍候再試");
+        return;
+      }
+      computeSlides();
+      if (state.slides.length === 0) {
+        showToast("沒有可匯出的投影片");
+        return;
+      }
+
+      const btn = $("btnExportPptx");
+      btn.disabled = true;
+      btn.textContent = "正在產生 .PPTX...";
+
+      try {
+        const zip = new JSZip();
+        const mediaEntries = [];
+        const extMap = new Map();
+
+        const registerImage = (nameBase, bgCfg) => {
+          if (!bgCfg.imageDataUrl) return null;
+          const b64 = bgCfg.imageDataUrl.split(",")[1];
+          const ext = bgCfg.imageExt === "png" ? "png" : bgCfg.imageExt === "webp" ? "webp" : "jpeg";
+          const mime = ext === "png" ? "image/png" : ext === "webp" ? "image/webp" : "image/jpeg";
+          const fileName = `${nameBase}.${ext}`;
+          mediaEntries.push({ path: `ppt/media/${fileName}`, b64 });
+          extMap.set(ext, mime);
+          return fileName;
+        };
+
+        const lyricsImgFile = (state.lyricsBg.mode === "image" || state.lyricsBg.mode === "online")
+          ? registerImage("bg_lyrics", state.lyricsBg)
+          : null;
+        const titleImgFile = (state.titleBg.mode === "image" && state.titleBg.imageDataUrl)
+          ? registerImage("bg_title", state.titleBg)
+          : null;
+
+        mediaEntries.forEach(m => zip.file(m.path, m.b64, { base64: true }));
+
+        let ctDefaults = `  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>\n  <Default Extension="xml" ContentType="application/xml"/>\n`;
+        for (const [ext, mime] of extMap.entries()) {
+          ctDefaults += `  <Default Extension="${ext}" ContentType="${mime}"/>\n`;
+        }
+        let ctOverrides = `  <Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/>\n  <Override PartName="/ppt/slideMasters/slideMaster1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slideMaster+xml"/>\n  <Override PartName="/ppt/slideLayouts/slideLayout1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"/>\n  <Override PartName="/ppt/theme/theme1.xml" ContentType="application/vnd.openxmlformats-officedocument.theme+xml"/>\n`;
+        state.slides.forEach((_, i) => {
+          ctOverrides += `  <Override PartName="/ppt/slides/slide${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>\n`;
+        });
+        zip.file("[Content_Types].xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">\n${ctDefaults}${ctOverrides}</Types>`);
+
+        zip.file("_rels/.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">\n  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="ppt/presentation.xml"/>\n</Relationships>`);
+
+        let sldIdList = "";
+        let presRels = "";
+        state.slides.forEach((_, i) => {
+          sldIdList += `    <p:sldId id="${256 + i}" r:id="rId${i + 2}"/>\n`;
+          presRels += `  <Relationship Id="rId${i + 2}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide${i + 1}.xml"/>\n`;
+        });
+        zip.file("ppt/presentation.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<p:presentation xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">\n  <p:sldMasterIdLst><p:sldMasterId id="2147483648" r:id="rId1"/></p:sldMasterIdLst>\n  <p:sldIdLst>\n${sldIdList}  </p:sldIdLst>\n  <p:sldSz cx="12192000" cy="6858000"/>\n  <p:notesSz cx="6858000" cy="9144000"/>\n</p:presentation>`);
+        zip.file("ppt/_rels/presentation.xml.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">\n  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideMaster" Target="slideMasters/slideMaster1.xml"/>\n${presRels}  <Relationship Id="rId999" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme" Target="theme/theme1.xml"/>\n</Relationships>`);
+
+        zip.file("ppt/theme/theme1.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<a:theme xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" name="IrisTheme"><a:themeElements><a:clrScheme name="Iris"><a:dk1><a:srgbClr val="000000"/></a:dk1><a:lt1><a:srgbClr val="FFFFFF"/></a:lt1><a:dk2><a:srgbClr val="523775"/></a:dk2><a:lt2><a:srgbClr val="FAF7FE"/></a:lt2><a:accent1><a:srgbClr val="6B4C8C"/></a:accent1><a:accent2><a:srgbClr val="9374B8"/></a:accent2><a:accent3><a:srgbClr val="E3D7F2"/></a:accent3><a:accent4><a:srgbClr val="556B2F"/></a:accent4><a:accent5><a:srgbClr val="1F3A52"/></a:accent5><a:accent6><a:srgbClr val="F5EFE6"/></a:accent6><a:hlink><a:srgbClr val="523775"/></a:hlink><a:folHlink><a:srgbClr val="6B4C8C"/></a:folHlink></a:clrScheme><a:fontScheme name="Standard"><a:majorFont><a:latin typeface="Microsoft JhengHei"/><a:ea typeface="Microsoft JhengHei"/><a:cs typeface=""/></a:majorFont><a:minorFont><a:latin typeface="Microsoft JhengHei"/><a:ea typeface="Microsoft JhengHei"/><a:cs typeface=""/></a:minorFont></a:fontScheme><a:fmtScheme name="Standard"><a:fillStyleLst><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></a:fillStyleLst><a:lnStyleLst><a:ln w="9525"><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></a:ln></a:lnStyleLst><a:effectStyleLst><a:effectStyle><a:effectLst/></a:effectStyle></a:effectStyleLst><a:bgFillStyleLst><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></a:bgFillStyleLst></a:fmtScheme></a:themeElements></a:theme>`);
+        zip.file("ppt/slideMasters/slideMaster1.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<p:sldMaster xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"><p:cSld><p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr/></p:spTree></p:cSld><p:clrMap bg1="lt1" tx1="dk1" bg2="lt2" tx2="dk2" accent1="accent1" accent2="accent2" accent3="accent3" accent4="accent4" accent5="accent5" accent6="accent6"/><p:sldLayoutIdLst><p:sldLayoutId id="2147483649" r:id="rId1"/></p:sldLayoutIdLst></p:sldMaster>`);
+        zip.file("ppt/slideMasters/_rels/slideMaster1.xml.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout" Target="../slideLayouts/slideLayout1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme" Target="../theme/theme1.xml"/></Relationships>`);
+        zip.file("ppt/slideLayouts/slideLayout1.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<p:sldLayout xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" type="blank"><p:cSld><p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr/></p:spTree></p:cSld></p:sldLayout>`);
+        zip.file("ppt/slideLayouts/_rels/slideLayout1.xml.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideMaster" Target="../slideMasters/slideMaster1.xml"/></Relationships>`);
+
+        state.slides.forEach((slide, idx) => {
+          const sNum = idx + 1;
+          const bgCfg = getEffectiveBg(slide.isTitle);
+          const usesTitleImg = slide.isTitle && state.titleBg.mode === "image" && titleImgFile;
+          const usesLyricsImg = (!slide.isTitle || state.titleBg.mode === "same") && (state.lyricsBg.mode === "image" || state.lyricsBg.mode === "online") && lyricsImgFile;
+          const imgFile = usesTitleImg ? titleImgFile : (usesLyricsImg ? lyricsImgFile : null);
+
+          let relsXml = `  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout" Target="../slideLayouts/slideLayout1.xml"/>\n`;
+          let bgXml = "";
+          let imgOverlayShape = "";
+
+          if (imgFile) {
+            relsXml += `  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="../media/${imgFile}"/>\n`;
+            bgXml = `<p:bg><p:bgPr><a:solidFill><a:srgbClr val="${hexNoHash(bgCfg.fadeBase)}"/></a:solidFill><a:effectLst/></p:bgPr></p:bg>`;
+            const amt = Math.round(bgCfg.opacity * 1000);
+            imgOverlayShape = `<p:pic><p:nvPicPr><p:cNvPr id="2" name="BgImage"/><p:cNvPicPr/><p:nvPr/></p:nvPicPr><p:blipFill><a:blip r:embed="rId2"><a:alphaModFix amt="${amt}"/></a:blip><a:stretch><a:fillRect/></a:stretch></p:blipFill><p:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="12192000" cy="6858000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr></p:pic>`;
+          } else if (bgCfg.mode === "gradient") {
+            const c1 = blendColor(bgCfg.gradC1, bgCfg.fadeBase, bgCfg.opacity);
+            const c2 = blendColor(bgCfg.gradC2, bgCfg.fadeBase, bgCfg.opacity);
+            const ang = ((bgCfg.gradAngle + 270) % 360) * 60000;
+            const pos2 = Math.round(bgCfg.gradRatio * 1000);
+            bgXml = `<p:bg><p:bgPr><a:gradFill><a:gsLst><a:gs pos="0"><a:srgbClr val="${c1}"/></a:gs><a:gs pos="${pos2}"><a:srgbClr val="${c2}"/></a:gs><a:gs pos="100000"><a:srgbClr val="${c2}"/></a:gs></a:gsLst><a:lin ang="${ang}" scaled="1"/></a:gradFill><a:effectLst/></p:bgPr></p:bg>`;
+          } else {
+            const solidHex = blendColor(bgCfg.color, bgCfg.fadeBase, bgCfg.opacity);
+            bgXml = `<p:bg><p:bgPr><a:solidFill><a:srgbClr val="${solidHex}"/></a:solidFill><a:effectLst/></p:bgPr></p:bg>`;
+          }
+
+          const box = computePptxBoxEmu(slide);
+          const prstGeom = state.backdropMode === "fit" ? "roundRect" : "rect";
+          let spFill = `<a:noFill/>`;
+          if (state.backdropMode !== "none") {
+            spFill = `<a:solidFill><a:srgbClr val="${hexNoHash(state.backdropColor)}"><a:alpha val="${Math.round(state.backdropOpacity * 1000)}"/></a:srgbClr></a:solidFill>`;
+          }
+
+          const fontName = state.fontFamily === "DFKai-SB" ? "標楷體" : "Microsoft JhengHei";
+          const boldAttr = state.bold ? ' b="1"' : ' b="0"';
+          const italicAttr = state.italic ? ' i="1"' : '';
+          const spcAttr = slide.letterSpacing ? ` spc="${slide.letterSpacing * 100}"` : "";
+          const strokeXml = state.enableStroke ? `<a:ln w="19050"><a:solidFill><a:srgbClr val="${hexNoHash(state.strokeColor)}"/></a:solidFill></a:ln>` : "";
+
+          const lines = slide.text.split("\n");
+          let parasXml = "";
+          if (slide.isTitle) {
+            const mainSz = slide.fontSize * 100;
+            parasXml += `<a:p><a:pPr algn="ctr"/><a:r><a:rPr lang="zh-TW" sz="${mainSz}"${boldAttr}${italicAttr}${spcAttr}><a:solidFill><a:srgbClr val="${hexNoHash(state.textColor)}"/></a:solidFill>${strokeXml}<a:latin typeface="${fontName}"/><a:ea typeface="${fontName}"/></a:rPr><a:t>${xmlEsc(lines[0] || "")}</a:t></a:r></a:p>`;
+            if (lines.length > 1 && lines.slice(1).join("").trim() !== "") {
+              const subSz = state.subtitleFontSize * 100;
+              lines.slice(1).forEach(subLine => {
+                parasXml += `<a:p><a:pPr algn="ctr"><a:spcBef><a:spcPts val="1400"/></a:spcBef></a:pPr><a:r><a:rPr lang="zh-TW" sz="${subSz}"${boldAttr}${italicAttr}><a:solidFill><a:srgbClr val="${hexNoHash(state.textColor)}"/></a:solidFill>${strokeXml}<a:latin typeface="${fontName}"/><a:ea typeface="${fontName}"/></a:rPr><a:t>${xmlEsc(subLine)}</a:t></a:r></a:p>`;
+              });
+            }
+          } else {
+            const sz = slide.fontSize * 100;
+            const lnPct = Math.round(slide.lineHeight * 100000);
+            lines.forEach(line => {
+              parasXml += `<a:p><a:pPr algn="ctr"><a:lnSpc><a:spcPct val="${lnPct}"/></a:lnSpc></a:pPr><a:r><a:rPr lang="zh-TW" sz="${sz}"${boldAttr}${italicAttr}${spcAttr}><a:solidFill><a:srgbClr val="${hexNoHash(state.textColor)}"/></a:solidFill>${strokeXml}<a:latin typeface="${fontName}"/><a:ea typeface="${fontName}"/></a:rPr><a:t>${xmlEsc(line)}</a:t></a:r></a:p>`;
+            });
+          }
+
+          const bodyAnchor = slide.isTitle ? "ctr" : "t";
+          const slideXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">\n  <p:cSld>\n    ${bgXml}\n    <p:spTree>\n      <p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr>\n      <p:grpSpPr/>\n      ${imgOverlayShape}\n      <p:sp>\n        <p:nvSpPr><p:cNvPr id="3" name="LyricsBox"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr>\n        <p:spPr><a:xfrm><a:off x="${box.x}" y="${box.y}"/><a:ext cx="${box.cx}" cy="${box.cy}"/></a:xfrm><a:prstGeom prst="${prstGeom}"><a:avLst/></a:prstGeom>${spFill}</p:spPr>\n        <p:txBody><a:bodyPr wrap="square" lIns="152400" tIns="101600" rIns="152400" bIns="101600" anchor="${bodyAnchor}"><a:noAutofit/></a:bodyPr><a:lstStyle/>${parasXml}</p:txBody>\n      </p:sp>\n    </p:spTree>\n  </p:cSld>\n</p:sld>`;
+
+          zip.file(`ppt/slides/slide${sNum}.xml`, slideXml);
+          zip.file(`ppt/slides/_rels/slide${sNum}.xml.rels`, `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">\n${relsXml}</Relationships>`);
+        });
+
+        const base64Data = await zip.generateAsync({ type: "base64" });
+        const dataUri = `data:application/vnd.openxmlformats-officedocument.presentationml.presentation;base64,${base64Data}`;
+        const safeName = (state.songTitle.trim() || "worship-slides").replace(/[\\/:*?"<>|]/g, "_") + ".pptx";
+
+        const link = $("exportDirectLink");
+        link.href = dataUri;
+        link.download = safeName;
+        link.click();
+
+        $("exportResultText").textContent = `已產生 16:9 簡報「${safeName}」（共 ${state.slides.length} 頁）！若未自動下載，請點右側按鈕：`;
+        $("exportResultBar").classList.add("show");
+        showToast(`已成功匯出 ${safeName}`);
+      } catch (err) {
+        alert("⚠️ 簡報匯出或下載失敗！\n\n若您目前使用 LINE 內建瀏覽器，請點選畫面右上角「⋮」或「···」，選擇「在外部瀏覽器開啟」（或「在 Safari / Chrome 中開啟」）後再試一次！");
+        showToast("匯出失敗，請切換至 Safari 或 Chrome 外部瀏覽器再試一次");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "⬇ 匯出 .PPTX 簡報";
+      }
+    }
+
+    /* =========================================================================
+     * 7. FILE UPLOAD, ONLINE PHOTO SEARCH & LYRICS AUTO-SEARCH
+     * ========================================================================= */
+    async function handleFileUpload(file, target) {
+      if (!file) return;
+      const statusEl = target === "lyrics" ? $("lyricsImgStatus") : $("titleImgStatus");
+      statusEl.className = "status-note status-info show";
+      statusEl.textContent = "正在處理檔案...";
+
+      try {
+        if (file.name.toLowerCase().endsWith(".pptx")) {
+          const zip = await JSZip.loadAsync(file);
+          const slideFiles = Object.keys(zip.files)
+            .filter(p => /^ppt\/slides\/slide\d+\.xml$/.test(p))
+            .sort((a, b) => parseInt(a.match(/\d+/)[0], 10) - parseInt(b.match(/\d+/)[0], 10));
+
+          const extracted = [];
+          for (const sf of slideFiles) {
+            const num = sf.match(/\d+/)[0];
+            const relPath = `ppt/slides/_rels/slide${num}.xml.rels`;
+            let imgEntryPath = null;
+            if (zip.files[relPath]) {
+              const relXml = await zip.files[relPath].async("string");
+              const m = relXml.match(/Target="\.\.\/(media\/[^"]+)"/);
+              if (m) imgEntryPath = "ppt/" + m[1];
+            }
+            if (imgEntryPath && zip.files[imgEntryPath]) {
+              const ext = imgEntryPath.split(".").pop().toLowerCase();
+              const mime = ext === "png" ? "image/png" : ext === "webp" ? "image/webp" : "image/jpeg";
+              const b64 = await zip.files[imgEntryPath].async("base64");
+              extracted.push({ type: "image", dataUrl: `data:${mime};base64,${b64}`, mime, ext: ext === "jpg" ? "jpeg" : ext });
+            } else {
+              const sXml = await zip.files[sf].async("string");
+              const cm = sXml.match(/<p:bg>[\s\S]*?<a:srgbClr val="([0-9A-Fa-f]{6})"/);
+              if (cm) extracted.push({ type: "solid", color: "#" + cm[1] });
+            }
+          }
+
+          if (extracted.length === 0) {
+            const mediaFiles = Object.keys(zip.files).filter(p => p.startsWith("ppt/media/") && /\.(png|jpe?g|webp)$/i.test(p)).sort();
+            for (const mf of mediaFiles) {
+              const ext = mf.split(".").pop().toLowerCase();
+              const mime = ext === "png" ? "image/png" : ext === "webp" ? "image/webp" : "image/jpeg";
+              const b64 = await zip.files[mf].async("base64");
+              extracted.push({ type: "image", dataUrl: `data:${mime};base64,${b64}`, mime, ext: ext === "jpg" ? "jpeg" : ext });
+            }
+          }
+
+          if (extracted.length === 0) {
+            statusEl.className = "status-note status-warn show";
+            statusEl.textContent = "在此 .pptx 中未偵測到圖片或背景色。";
+            return;
+          }
+
+          const applyEntry = (cfg, entry) => {
+            if (entry.type === "image") {
+              cfg.mode = "image";
+              cfg.imageDataUrl = entry.dataUrl;
+              cfg.imageMime = entry.mime;
+              cfg.imageExt = entry.ext;
+            } else {
+              cfg.mode = "solid";
+              cfg.color = entry.color;
+            }
+          };
+
+          if (target === "lyrics") {
+            if (extracted.length >= 2) {
+              applyEntry(state.titleBg, extracted[0]);
+              applyEntry(state.lyricsBg, extracted[1]);
+              setTitleBgMode(state.titleBg.mode);
+              statusEl.textContent = `已從 .pptx 擷取 ${extracted.length} 頁底圖：第 1 張套用至標題頁，第 2 張套用至歌詞頁！`;
+            } else {
+              applyEntry(state.lyricsBg, extracted[0]);
+              statusEl.textContent = "已從 .pptx 成功擷取底圖！";
+            }
+            updateBackgroundLayersOnly();
+          } else {
+            applyEntry(state.titleBg, extracted[0]);
+            statusEl.textContent = "已從 .pptx 擷取第 1 張底圖至標題頁！";
+            updateBackgroundLayersOnly();
+          }
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const ext = (file.name.split(".").pop() || "png").toLowerCase();
+          const normExt = ext === "jpg" ? "jpeg" : ext;
+          const cfg = target === "lyrics" ? state.lyricsBg : state.titleBg;
+          cfg.mode = "image";
+          cfg.imageDataUrl = e.target.result;
+          cfg.imageMime = file.type || `image/${normExt}`;
+          cfg.imageExt = normExt;
+          statusEl.textContent = `已載入圖片：${file.name}`;
+          updateBackgroundLayersOnly();
+        };
+        reader.readAsDataURL(file);
+      } catch {
+        statusEl.className = "status-note status-warn show";
+        statusEl.textContent = "讀取檔案失敗，請確認檔案格式是否正確。";
+      }
+    }
+
+    const photoSearchState = {
+      lastQuery: "",
+      batchIndex: 0
+    };
+
+    const CURATED_WORSHIP_PHOTOS = [
+      { title: "Sunrise Clouds Light", thumburl: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=960&q=80" },
+      { title: "Misty Forest Morning", thumburl: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=960&q=80" },
+      { title: "Golden Horizon Sky", thumburl: "https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?auto=format&fit=crop&w=960&q=80" },
+      { title: "Calm Lake Reflection", thumburl: "https://images.unsplash.com/photo-1439066615861-d1af74d74000?auto=format&fit=crop&w=960&q=80" },
+      { title: "Starry Night Galaxy", thumburl: "https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=960&q=80" },
+      { title: "Soft Purple Sunset", thumburl: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=960&q=80" },
+      { title: "Mountain Dawn Peaks", thumburl: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=960&q=80" },
+      { title: "Warm Wheat Field", thumburl: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=960&q=80" },
+      { title: "Peaceful Ocean Waves", thumburl: "https://images.unsplash.com/photo-1505118380757-91f5f5632de0?auto=format&fit=crop&w=960&q=80" },
+      { title: "Sunbeams Through Trees", thumburl: "https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=960&q=80" },
+      { title: "Lavender Meadow Dusk", thumburl: "https://images.unsplash.com/photo-1499002238440-d264edd596ec?auto=format&fit=crop&w=960&q=80" },
+      { title: "Alpine Valley Mist", thumburl: "https://images.unsplash.com/photo-1454496522488-7a8e488e8606?auto=format&fit=crop&w=960&q=80" },
+      { title: "Dramatic Cloudscape", thumburl: "https://images.unsplash.com/photo-1534088568595-a066f410bcda?auto=format&fit=crop&w=960&q=80" },
+      { title: "Autumn Forest Path", thumburl: "https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?auto=format&fit=crop&w=960&q=80" },
+      { title: "Serene Waterfall Stream", thumburl: "https://images.unsplash.com/photo-1432405972618-c60b0225b8f9?auto=format&fit=crop&w=960&q=80" },
+      { title: "Pastel Sky Horizon", thumburl: "https://images.unsplash.com/photo-1513002749550-c59d786b8e6c?auto=format&fit=crop&w=960&q=80" }
+    ];
+
+    // 全域 forceOpenNewTab(event, url)：支援 onclick="forceOpenNewTab(event, ...); return false;" 強制開啟全新分頁
+    let extTabCounter = 0;
+
+    function prepareExternalSearchLink(anchorEl, rawUrl) {
+      if (!rawUrl) return rawUrl;
+      let finalUrl = rawUrl;
+      if (isLineInAppBrowser() && !/[?&]openExternalBrowser=1\b/i.test(finalUrl)) {
+        finalUrl += (finalUrl.includes("?") ? "&" : "?") + "openExternalBrowser=1";
+      }
+      if (anchorEl) {
+        anchorEl.href = finalUrl;
+        anchorEl.target = "_blank";
+        anchorEl.rel = "noopener noreferrer";
+        anchorEl.setAttribute("target", "_blank");
+        anchorEl.setAttribute("rel", "noopener noreferrer");
+      }
+      return finalUrl;
+    }
+
+    window.forceOpenNewTab = function(event, url) {
+      if (event) {
+        event.preventDefault();
+        event.stopPropagation(); // 切斷所有框架或上層事件攔截
+      }
+      // 取得歌名
+      let songTitle = "";
+      const songInput = document.querySelector('input[placeholder*="歌名"]');
+      if (songInput) songTitle = songInput.value.trim();
+
+      // 動態生成搜尋網址 (加防快取時間戳)
+      let targetUrl = url;
+      if (url.includes('google.com')) {
+        targetUrl = 'https://www.google.com/search?q=' + encodeURIComponent(songTitle + ' 歌詞') + '&t=' + Date.now();
+      } else if (url.includes('kbox') || url.includes('kkbox')) {
+        const q = songTitle ? encodeURIComponent(songTitle + ' 歌詞') : '';
+        targetUrl = q ? 'https://www.google.com/search?q=' + q + '+site:lyrics.kkbox.com' + '&t=' + Date.now() : 'https://lyrics.kkbox.com/';
+      }
+
+      // 1. 標準強制外開
+      let newTab = window.open(targetUrl, '_blank', 'noopener,noreferrer');
+
+      // 2. 如果瀏覽器或 WebView 封鎖了彈出
+      if (!newTab || newTab.closed || typeof newTab.closed === 'undefined') {
+        const tempA = document.createElement('a');
+        tempA.href = targetUrl;
+        tempA.target = '_blank';
+        tempA.rel = 'noopener noreferrer';
+        tempA.style.display = 'none';
+        document.body.appendChild(tempA);
+        tempA.click(); // 模擬點擊
+        setTimeout(() => document.body.removeChild(tempA), 100);
+      }
+      return false;
+    };
+    const forceOpenNewTab = window.forceOpenNewTab;
+
+    function bindExternalNewTabButton(el, getUrlFn) {
+      if (!el) return;
+      const syncAttr = () => {
+        const targetUrl = typeof getUrlFn === "function" ? getUrlFn() : el.href;
+        return prepareExternalSearchLink(el, targetUrl);
+      };
+      syncAttr();
+      if (el.dataset.boundNewTab === "1") return;
+      el.dataset.boundNewTab = "1";
+      el.addEventListener("pointerdown", syncAttr, { passive: true });
+      el.addEventListener("touchstart", syncAttr, { passive: true });
+      el.addEventListener("mouseenter", syncAttr, { passive: true });
+    }
+
+    function getUnsplashSearchUrl(rawQuery) {
+      const q = (rawQuery !== undefined ? rawQuery : ($("onlinePhotoQuery")?.value || "")).trim() || "nature sky light";
+      return `https://unsplash.com/s/photos/${encodeURIComponent(q)}`;
+    }
+
+    function getPexelsSearchUrl(rawQuery) {
+      const q = (rawQuery !== undefined ? rawQuery : ($("onlinePhotoQuery")?.value || "")).trim() || "nature sky light";
+      return `https://www.pexels.com/zh-tw/search/${encodeURIComponent(q)}/`;
+    }
+
+    function syncStockPhotoLinks() {
+      document.querySelectorAll('a[data-stock-search="unsplash"]').forEach(el => {
+        bindExternalNewTabButton(el, () => getUnsplashSearchUrl(), "unsplash");
+      });
+      document.querySelectorAll('a[data-stock-search="pexels"]').forEach(el => {
+        bindExternalNewTabButton(el, () => getPexelsSearchUrl(), "pexels");
+      });
+    }
+
+    async function searchOnlinePhotos(isNextBatch = false) {
+      const q = $("onlinePhotoQuery").value.trim() || "nature sky light";
+      syncStockPhotoLinks();
+      const status = $("onlinePhotoStatus");
+      const grid = $("onlinePhotoGrid");
+      status.className = "status-note status-info show";
+
+      if (isNextBatch) {
+        photoSearchState.lastQuery = q;
+        photoSearchState.batchIndex += 1;
+      } else if (photoSearchState.lastQuery !== q) {
+        photoSearchState.lastQuery = q;
+        photoSearchState.batchIndex = 0;
+      }
+
+      const batchNum = photoSearchState.batchIndex + 1;
+      status.textContent = isNextBatch ? `正在為您切換第 ${batchNum} 批高畫質無版權圖片...` : "搜尋圖片中...";
+      grid.innerHTML = "";
+
+      const renderPhotoItems = (items) => {
+        grid.innerHTML = "";
+        status.className = "status-note status-info show";
+        status.textContent = `點擊任一張圖片即可套用為歌詞頁底圖（目前為第 ${batchNum} 批，不滿意可點下方「換一批新圖」）：`;
+        items.forEach(item => {
+          const thumbUrl = item.thumburl;
+          const div = document.createElement("div");
+          div.className = "photo-thumb";
+          const img = document.createElement("img");
+          img.crossOrigin = "anonymous";
+          img.src = thumbUrl;
+          img.alt = item.title || "背景圖片";
+          div.appendChild(img);
+          div.addEventListener("click", async () => {
+            try {
+              const r = await fetch(thumbUrl);
+              const blob = await r.blob();
+              const reader = new FileReader();
+              reader.onload = () => {
+                state.lyricsBg.mode = "online";
+                state.lyricsBg.imageDataUrl = reader.result;
+                state.lyricsBg.imageMime = blob.type || "image/jpeg";
+                state.lyricsBg.imageExt = blob.type === "image/png" ? "png" : "jpeg";
+                showToast("已套用線上圖片為歌詞頁底圖");
+                updateBackgroundLayersOnly();
+              };
+              reader.readAsDataURL(blob);
+            } catch {
+              showToast("此圖片受網站限制無法下載，請換另一張或改用本機上傳");
+            }
+          });
+          grid.appendChild(div);
+        });
+      };
+
+      try {
+        const offset = (photoSearchState.batchIndex * 8) % 48;
+        const url = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrnamespace=6&gsrsearch=${encodeURIComponent(q + " filetype:bitmap")}&gsrlimit=16&gsroffset=${offset}&prop=imageinfo&iiprop=url|mime&iiurlwidth=960&format=json&origin=*`;
+        const res = await fetch(url);
+        const data = await res.json();
+        const pages = Object.values(data?.query?.pages || {});
+        let imgs = pages
+          .filter(p => p.imageinfo?.[0]?.thumburl)
+          .map(p => ({ title: p.title, thumburl: p.imageinfo[0].thumburl }));
+
+        if (isNextBatch && imgs.length > 1) {
+          // 動態隨機洗牌以確保每次點擊「換一批新圖」都有新鮮組合
+          for (let i = imgs.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [imgs[i], imgs[j]] = [imgs[j], imgs[i]];
+          }
+        }
+
+        if (imgs.length >= 8) {
+          renderPhotoItems(imgs.slice(0, 8));
+          return;
+        }
+
+        // 若該關鍵字線上結果不足 8 張，自動補齊無版權高畫質精選圖庫並隨批次輪替
+        const rotatedCurated = [...CURATED_WORSHIP_PHOTOS];
+        const shift = (photoSearchState.batchIndex * 5) % rotatedCurated.length;
+        const combined = [
+          ...imgs,
+          ...rotatedCurated.slice(shift),
+          ...rotatedCurated.slice(0, shift)
+        ].slice(0, 8);
+        renderPhotoItems(combined);
+      } catch {
+        const rotatedCurated = [...CURATED_WORSHIP_PHOTOS];
+        const shift = (photoSearchState.batchIndex * 5) % rotatedCurated.length;
+        const fallbackBatch = [
+          ...rotatedCurated.slice(shift),
+          ...rotatedCurated.slice(0, shift)
+        ].slice(0, 8);
+        renderPhotoItems(fallbackBatch);
+      }
+    }
+
+    function getKkboxSearchUrl(rawTitle) {
+      const songTitle = (rawTitle !== undefined ? rawTitle : ($("songTitleInput")?.value || "")).trim();
+      const q = songTitle ? encodeURIComponent(songTitle + " 歌詞") : "";
+      return q ? `https://www.google.com/search?q=${q}+site:lyrics.kkbox.com` : "https://lyrics.kkbox.com/";
+    }
+
+    function getGoogleSearchUrl(rawTitle) {
+      const songTitle = (rawTitle !== undefined ? rawTitle : ($("songTitleInput")?.value || "")).trim();
+      return `https://www.google.com/search?q=${encodeURIComponent(songTitle + " 歌詞")}`;
+    }
+
+    function buildExternalSearchButtonsHtml(rawTitle) {
+      const kkUrl = prepareExternalSearchLink(null, getKkboxSearchUrl(rawTitle));
+      const ggUrl = prepareExternalSearchLink(null, getGoogleSearchUrl(rawTitle));
+      return `<a class="btn btn-secondary btn-sm" target="_blank" rel="noopener noreferrer" data-external-search="kkbox" href="${kkUrl}" onclick="return window.forceOpenNewTab(event, 'https://lyrics.kkbox.com/');">🎵 KKBOX 搜尋</a><a class="btn btn-secondary btn-sm" target="_blank" rel="noopener noreferrer" data-external-search="google" href="${ggUrl}" onclick="return window.forceOpenNewTab(event, 'https://www.google.com/');">🌐 Google 搜尋</a>`;
+    }
+
+    function syncExternalSearchLinks() {
+      document.querySelectorAll('a[data-external-search="kkbox"]').forEach(el => {
+        bindExternalNewTabButton(el, () => getKkboxSearchUrl(), "kkbox");
+      });
+      document.querySelectorAll('a[data-external-search="google"]').forEach(el => {
+        bindExternalNewTabButton(el, () => getGoogleSearchUrl(), "google");
+      });
+    }
+
+    function applyLyricsMatch(item, statusEl) {
+      const raw = item.plainLyrics || item.syncedLyrics;
+      $("lyricsInput").value = cleanAndSplitLyrics(raw);
+      state.overrides = {};
+      statusEl.className = "status-note status-info show";
+      const artist = item.artistName ? `（${item.artistName}）` : "";
+      const title = $("songTitleInput").value.trim();
+      statusEl.innerHTML = `<span>已載入「${item.trackName || "未知曲目"}${artist}」並完成智慧斷句與副歌偵測！</span>${buildExternalSearchButtonsHtml(title)}`;
+      syncExternalSearchLinks();
+      renderPreview();
+    }
+
+    async function autoSearchLyrics() {
+      const title = $("songTitleInput").value.trim();
+      const status = $("lyricsSearchStatus");
+      const choices = $("lyricsSearchChoices");
+      choices.innerHTML = "";
+      if (!title) {
+        status.className = "status-note status-warn show";
+        status.textContent = "請先輸入詩歌歌名再搜尋。";
+        return;
+      }
+
+      const btn = $("btnAutoSearchLyrics");
+      btn.disabled = true;
+      btn.textContent = "搜尋中...";
+      status.className = "status-note status-info show";
+      status.textContent = `正在搜尋歌名「${title}」歌詞...`;
+
+      const key = title.toLowerCase();
+      if (BUILTIN_HYMNS[title] || BUILTIN_HYMNS[key]) {
+        $("lyricsInput").value = cleanAndSplitLyrics(BUILTIN_HYMNS[title] || BUILTIN_HYMNS[key]);
+        state.overrides = {};
+        status.className = "status-note status-info show";
+        status.innerHTML = `<span>已從內建經典詩歌庫載入「${title}」並完成斷句與副歌標記！</span>${buildExternalSearchButtonsHtml(title)}`;
+        syncExternalSearchLinks();
+        renderPreview();
+        btn.disabled = false;
+        btn.textContent = "🔍 一鍵搜尋歌詞";
+        return;
+      }
+
+      try {
+        let list = [];
+        const resTrack = await fetch(`https://lrclib.net/api/search?track_name=${encodeURIComponent(title)}`);
+        if (resTrack.ok) list = (await resTrack.json() || []).filter(item => item.plainLyrics || item.syncedLyrics);
+        if (list.length === 0) {
+          const resAll = await fetch(`https://lrclib.net/api/search?q=${encodeURIComponent(title)}`);
+          if (resAll.ok) list = (await resAll.json() || []).filter(item => item.plainLyrics || item.syncedLyrics);
+        }
+
+        if (list.length > 0) {
+          const norm = title.toLowerCase().replace(/\s+/g, "");
+          const scoreItem = (it) => {
+            const tn = (it.trackName || "").toLowerCase().replace(/\s+/g, "");
+            return tn === norm ? 3 : tn.startsWith(norm) ? 2 : tn.includes(norm) ? 1 : 0;
+          };
+          list.sort((a, b) => scoreItem(b) - scoreItem(a));
+
+          const topScore = scoreItem(list[0]);
+          if (topScore >= 2) {
+            applyLyricsMatch(list[0], status);
+          } else {
+            status.className = "status-note status-warn show";
+            status.innerHTML = `<span>未找到歌名完全相符的「${title}」，請從下方相關曲目點選，或改用外部搜尋：</span>${buildExternalSearchButtonsHtml(title)}`;
+            syncExternalSearchLinks();
+          }
+
+          const candidates = list.slice(0, 6);
+          if (candidates.length > 1 || topScore < 2) {
+            candidates.forEach((item, idx) => {
+              const cBtn = document.createElement("button");
+              cBtn.type = "button";
+              cBtn.className = "pill-btn" + (idx === 0 && topScore >= 2 ? " active" : "");
+              cBtn.textContent = `${item.trackName}${item.artistName ? " - " + item.artistName : ""}`;
+              cBtn.addEventListener("click", () => {
+                choices.querySelectorAll(".pill-btn").forEach(b => b.classList.remove("active"));
+                cBtn.classList.add("active");
+                applyLyricsMatch(item, status);
+              });
+              choices.appendChild(cBtn);
+            });
+          }
+
+          btn.disabled = false;
+          btn.textContent = "🔍 一鍵搜尋歌詞";
+          return;
+        }
+      } catch {
+        // Fallback to web links below
+      }
+
+      status.className = "status-note status-warn show";
+      status.innerHTML = `<span>線上曲庫暫無「${title}」，可點右側搜尋並貼回下方一鍵斷句：</span>${buildExternalSearchButtonsHtml(title)}`;
+      syncExternalSearchLinks();
+      btn.disabled = false;
+      btn.textContent = "🔍 一鍵搜尋歌詞";
+    }
+
+    /* =========================================================================
+     * 8. MODAL EDITOR & DRAG INTERACTION
+     * ========================================================================= */
+    function openEditModal(idx) {
+      state.editingIdx = idx;
+      const slide = state.slides[idx];
+      $("modalSlideTitle").textContent = slide.isTitle ? "微調標題頁（第 1 頁）" : `微調第 ${idx + 1} 頁`;
+      $("mX").value = slide.xPct;
+      $("mY").value = slide.yPct;
+      $("mSize").value = slide.fontSize;
+      $("mLineHeight").value = Math.round(slide.lineHeight * 100);
+      $("mLetterSpace").value = slide.letterSpacing;
+      $("mText").value = slide.text;
+      updateModalStage();
+      $("editModal").classList.add("open");
+    }
+
+    function updateModalStage() {
+      const idx = state.editingIdx;
+      if (idx < 0) return;
+      const slide = state.slides[idx];
+      const stage = $("modalStage");
+      const dragBox = $("modalDragBox");
+
+      const x = parseInt($("mX").value, 10);
+      const y = parseInt($("mY").value, 10);
+      const sz = parseInt($("mSize").value, 10);
+      const lh = parseInt($("mLineHeight").value, 10) / 100;
+      const ls = parseInt($("mLetterSpace").value, 10);
+
+      $("mXVal").textContent = x + "%";
+      $("mYVal").textContent = y + "%";
+      $("mSizeVal").textContent = sz + "pt";
+      $("mSpaceVal").textContent = `${lh.toFixed(2)} / ${ls}px`;
+
+      applyBgToElements($("modalBgLayer"), $("modalFadeLayer"), getEffectiveBg(slide.isTitle));
+
+      const scale = Math.max(0.3, stage.clientWidth / 960);
+      renderSlideBoxContent(dragBox, {
+        ...slide,
+        text: $("mText").value,
+        xPct: x,
+        yPct: y,
+        fontSize: sz,
+        lineHeight: lh,
+        letterSpacing: ls
+      }, scale);
+    }
+
+    (() => {
+      const stage = $("modalStage");
+      const box = $("modalDragBox");
+      let dragging = false, startX = 0, startY = 0, initXPct = 50, initYPct = 10;
+
+      const onStart = (cx, cy) => {
+        dragging = true;
+        startX = cx;
+        startY = cy;
+        initXPct = parseInt($("mX").value, 10);
+        initYPct = parseInt($("mY").value, 10);
+      };
+      const onMove = (cx, cy) => {
+        if (!dragging) return;
+        const rect = stage.getBoundingClientRect();
+        const dx = ((cx - startX) / rect.width) * 100;
+        const dy = ((cy - startY) / rect.height) * 100;
+        $("mX").value = Math.min(85, Math.max(15, Math.round(initXPct + dx)));
+        $("mY").value = Math.min(80, Math.max(5, Math.round(initYPct + dy)));
+        updateModalStage();
+      };
+      const onEnd = () => { dragging = false; };
+
+      box.addEventListener("mousedown", (e) => { e.preventDefault(); onStart(e.clientX, e.clientY); });
+      window.addEventListener("mousemove", (e) => onMove(e.clientX, e.clientY));
+      window.addEventListener("mouseup", onEnd);
+      box.addEventListener("touchstart", (e) => { if (e.touches[0]) onStart(e.touches[0].clientX, e.touches[0].clientY); }, { passive: true });
+      window.addEventListener("touchmove", (e) => { if (dragging && e.touches[0]) onMove(e.touches[0].clientX, e.touches[0].clientY); }, { passive: true });
+      window.addEventListener("touchend", onEnd);
+    })();
+
+    /* =========================================================================
+     * 9. UNIFIED UI WIRING & EVENT LISTENERS
+     * ========================================================================= */
+    function setLyricsBgMode(mode) {
+      state.lyricsBg.mode = mode;
+      document.querySelectorAll("#lyricsBgTabs .seg-btn").forEach(b => b.classList.toggle("active", b.dataset.mode === mode));
+      $("lyricsPanelSolid").classList.toggle("hidden", mode !== "solid");
+      $("lyricsPanelGradient").classList.toggle("hidden", mode !== "gradient");
+      $("lyricsPanelImage").classList.toggle("hidden", mode !== "image");
+      $("lyricsPanelOnline").classList.toggle("hidden", mode !== "online");
+      if (mode === "online" && $("onlinePhotoGrid") && $("onlinePhotoGrid").children.length === 0) {
+        searchOnlinePhotos(false);
+      }
+      updateBackgroundLayersOnly();
+    }
+
+    function setTitleBgMode(mode) {
+      state.titleBg.mode = mode;
+      document.querySelectorAll("#titleBgTabs .seg-btn").forEach(b => b.classList.toggle("active", b.dataset.mode === mode));
+      $("titlePanelSame").classList.toggle("hidden", mode !== "same");
+      $("titlePanelSolid").classList.toggle("hidden", mode !== "solid");
+      $("titlePanelGradient").classList.toggle("hidden", mode !== "gradient");
+      $("titlePanelImage").classList.toggle("hidden", mode !== "image");
+      $("titleOpacityRow").classList.toggle("hidden", mode === "same");
+      updateBackgroundLayersOnly();
+    }
+
+    function bindBgSection(prefix, bgState, setModeFn) {
+      const refreshFn = updateBackgroundLayersOnly;
+      document.querySelectorAll(`#${prefix}BgTabs .seg-btn`).forEach(btn => {
+        btn.addEventListener("click", () => setModeFn(btn.dataset.mode));
+      });
+      document.querySelectorAll(`#${prefix}PanelSolid .swatch-btn`).forEach(btn => {
+        btn.addEventListener("click", () => {
+          document.querySelectorAll(`#${prefix}PanelSolid .swatch-btn`).forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          bgState.color = btn.dataset.color;
+          $(`${prefix}SolidColor`).value = btn.dataset.color;
+          refreshFn();
+        });
+      });
+      $(`${prefix}SolidColor`).addEventListener("input", (e) => { bgState.color = e.target.value; refreshFn(); });
+      $(`${prefix}GradC1`).addEventListener("input", (e) => { bgState.gradC1 = e.target.value; refreshFn(); });
+      $(`${prefix}GradC2`).addEventListener("input", (e) => { bgState.gradC2 = e.target.value; refreshFn(); });
+      $(`${prefix}GradSwap`).addEventListener("click", () => {
+        [bgState.gradC1, bgState.gradC2] = [bgState.gradC2, bgState.gradC1];
+        $(`${prefix}GradC1`).value = bgState.gradC1;
+        $(`${prefix}GradC2`).value = bgState.gradC2;
+        refreshFn();
+      });
+      $(`${prefix}GradAngle`).addEventListener("change", (e) => {
+        bgState.gradAngle = parseInt(e.target.value, 10);
+        const angleLabel = $(`${prefix}GradAngleVal`);
+        if (angleLabel) angleLabel.textContent = e.target.value + "°";
+        refreshFn();
+      });
+      $(`${prefix}GradRatio`).addEventListener("input", (e) => {
+        bgState.gradRatio = parseInt(e.target.value, 10);
+        const ratioLabel = $(`${prefix}GradRatioVal`);
+        if (ratioLabel) ratioLabel.textContent = e.target.value + "%";
+        refreshFn();
+      });
+      $(`${prefix}FileInput`).addEventListener("change", (e) => handleFileUpload(e.target.files[0], prefix));
+      $(`${prefix}Opacity`).addEventListener("input", (e) => {
+        bgState.opacity = parseInt(e.target.value, 10);
+        $(`${prefix}OpacityVal`).textContent = e.target.value + "%";
+        refreshFn();
+      });
+      document.querySelectorAll(`#${prefix}FadeBase .pill-btn`).forEach(btn => {
+        btn.addEventListener("click", () => {
+          document.querySelectorAll(`#${prefix}FadeBase .pill-btn`).forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          bgState.fadeBase = btn.dataset.base;
+          refreshFn();
+        });
+      });
+    }
+
+    bindBgSection("lyrics", state.lyricsBg, setLyricsBgMode);
+    bindBgSection("title", state.titleBg, setTitleBgMode);
+
+    $("btnSearchPhotos").addEventListener("click", () => searchOnlinePhotos(false));
+    $("btnNextPhotoBatch").addEventListener("click", () => searchOnlinePhotos(true));
+    $("onlinePhotoQuery").addEventListener("input", syncStockPhotoLinks);
+    $("onlinePhotoQuery").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        searchOnlinePhotos(false);
+      }
+    });
+    $("btnAnalyzeMood").addEventListener("click", () => {
+      analyzeLyricsMood();
+      showToast("已重新分析歌詞意境關鍵字！");
+    });
+    $("btnApplyRecommendedTheme").addEventListener("click", () => applyMoodTheme(state.recommendedThemeId));
+
+    // Title Controls: strictly update only Title Slide (Slide 1) without resetting any lyric slide settings
+    $("enableTitleSlide").addEventListener("change", (e) => {
+      state.enableTitleSlide = e.target.checked;
+      $("titleSlideBox").classList.toggle("hidden", !state.enableTitleSlide);
+      renderPreview();
+    });
+    $("songTitleInput").addEventListener("input", (e) => {
+      state.songTitle = e.target.value;
+      if (state.titleOverride) delete state.titleOverride.text;
+      syncExternalSearchLinks();
+      updateTitleSlideOnly();
+    });
+    $("songSubtitleInput").addEventListener("input", (e) => {
+      state.songSubtitle = e.target.value;
+      if (state.titleOverride) delete state.titleOverride.text;
+      updateTitleSlideOnly();
+    });
+    $("titleFontSize").addEventListener("input", (e) => {
+      state.titleFontSize = parseInt(e.target.value, 10);
+      $("titleFontSizeVal").textContent = e.target.value + "pt";
+      if (state.titleOverride) delete state.titleOverride.fontSize;
+      updateTitleSlideOnly();
+    });
+    $("subtitleFontSize").addEventListener("input", (e) => {
+      state.subtitleFontSize = parseInt(e.target.value, 10);
+      $("subtitleFontSizeVal").textContent = e.target.value + "pt";
+      updateTitleSlideOnly();
+    });
+
+    // Smart Lyrics Actions
+    $("btnAutoSearchLyrics").addEventListener("click", autoSearchLyrics);
+    $("btnPasteClean").addEventListener("click", async () => {
+      try {
+        const clip = await navigator.clipboard.readText();
+        if (!clip || !clip.trim()) {
+          showToast("剪貼簿目前沒有文字，請先複製歌詞再貼上");
+          return;
+        }
+        $("lyricsInput").value = cleanAndSplitLyrics(clip);
+        state.overrides = {};
+        renderPreview();
+        showToast("已貼上歌詞並完成智慧斷句與副歌偵測！");
+      } catch {
+        showToast("瀏覽器未授權讀取剪貼簿，請手動貼入下方再按「智慧去標點與長句斷句」");
+      }
+    });
+    $("btnCleanLyrics").addEventListener("click", () => {
+      $("lyricsInput").value = cleanAndSplitLyrics($("lyricsInput").value);
+      state.overrides = {};
+      renderPreview();
+      showToast("已完成去標點與長句智慧斷句！");
+    });
+    $("btnDetectChorus").addEventListener("click", () => {
+      $("lyricsInput").value = cleanAndSplitLyrics($("lyricsInput").value);
+      analyzeAndDetectChorus(true);
+      state.overrides = {};
+      renderPreview();
+      showToast("已自動識別主歌與副歌並加上段落標記！");
+    });
+    $("btnExpandChorus").addEventListener("click", expandChorusRepeats);
+    $("btnDedupeLyrics").addEventListener("click", dedupeRepeatedStanzas);
+    $("btnClearLyrics").addEventListener("click", () => {
+      $("lyricsInput").value = "";
+      state.overrides = {};
+      renderPreview();
+    });
+    $("lyricsInput").addEventListener("paste", (e) => {
+      const clipText = (e.clipboardData || window.clipboardData)?.getData("text");
+      if (!clipText) return;
+      e.preventDefault();
+      const ta = $("lyricsInput");
+      const start = ta.selectionStart ?? ta.value.length;
+      const end = ta.selectionEnd ?? ta.value.length;
+      const before = ta.value.slice(0, start);
+      const after = ta.value.slice(end);
+      const combined = (before && !before.endsWith("\n") ? before + "\n" : before) +
+        clipText +
+        (after && !after.startsWith("\n") ? "\n" + after : after);
+      ta.value = cleanAndSplitLyrics(combined);
+      state.overrides = {};
+      renderPreview();
+      showToast("已自動移除多餘空行、清除標點並完成斷句！");
+    });
+    $("lyricsInput").addEventListener("input", () => {
+      state.overrides = {};
+      renderPreview();
+    });
+
+    // Typography & Splitting
+    document.querySelectorAll("#splitModeGroup .pill-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll("#splitModeGroup .pill-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        state.splitMode = btn.dataset.split;
+        state.overrides = {};
+        renderPreview();
+      });
+    });
+    $("fontFamilySelect").addEventListener("change", (e) => { state.fontFamily = e.target.value; renderPreview(); });
+    $("lyricsFontSize").addEventListener("input", (e) => {
+      state.lyricsFontSize = parseInt(e.target.value, 10);
+      $("lyricsFontSizeVal").textContent = e.target.value + "pt";
+      Object.values(state.overrides).forEach(ov => { if (ov) delete ov.fontSize; });
+      renderPreview();
+    });
+    $("lyricsTopPct").addEventListener("input", (e) => {
+      state.lyricsTopPct = parseInt(e.target.value, 10);
+      $("lyricsTopVal").textContent = e.target.value + "%";
+      Object.values(state.overrides).forEach(ov => { if (ov) delete ov.yPct; });
+      renderPreview();
+    });
+    $("btnBold").addEventListener("click", () => {
+      state.bold = !state.bold;
+      $("btnBold").classList.toggle("active", state.bold);
+      renderPreview();
+    });
+    $("btnItalic").addEventListener("click", () => {
+      state.italic = !state.italic;
+      $("btnItalic").classList.toggle("active", state.italic);
+      renderPreview();
+    });
+    $("textColorInput").addEventListener("input", (e) => { state.textColor = e.target.value; updateBackgroundAndColorOnly(); });
+    $("enableStroke").addEventListener("change", (e) => { state.enableStroke = e.target.checked; updateBackgroundAndColorOnly(); });
+    $("strokeColorInput").addEventListener("input", (e) => { state.strokeColor = e.target.value; updateBackgroundAndColorOnly(); });
+    $("backdropModeSelect").addEventListener("change", (e) => { state.backdropMode = e.target.value; renderPreview(); });
+    $("backdropColorInput").addEventListener("input", (e) => { state.backdropColor = e.target.value; renderPreview(); });
+    $("backdropOpacityInput").addEventListener("input", (e) => { state.backdropOpacity = parseInt(e.target.value, 10); renderPreview(); });
+
+    // Prevent mousewheel from accidentally changing range sliders while scrolling page
+    document.querySelectorAll('input[type="range"]').forEach(slider => {
+      slider.addEventListener("wheel", (e) => {
+        if (document.activeElement === slider) {
+          slider.blur();
+        }
+      }, { passive: true });
+    });
+
+    // Modal Controls
+    ["mX", "mY", "mSize", "mLineHeight", "mLetterSpace", "mText"].forEach(id => {
+      $(id).addEventListener("input", updateModalStage);
+    });
+    $("btnCloseModal").addEventListener("click", () => $("editModal").classList.remove("open"));
+    $("btnResetModal").addEventListener("click", () => {
+      if (state.editingIdx >= 0) {
+        const slide = state.slides[state.editingIdx];
+        if (slide && slide.isTitle) {
+          state.titleOverride = {};
+          $("editModal").classList.remove("open");
+          updateTitleSlideOnly();
+        } else if (slide) {
+          delete state.overrides[slide.lyricIdx];
+          $("editModal").classList.remove("open");
+          renderPreview();
+        }
+      }
+    });
+    $("btnSaveModal").addEventListener("click", () => {
+      if (state.editingIdx >= 0) {
+        const slide = state.slides[state.editingIdx];
+        const newOv = {
+          xPct: parseInt($("mX").value, 10),
+          yPct: parseInt($("mY").value, 10),
+          fontSize: parseInt($("mSize").value, 10),
+          lineHeight: parseInt($("mLineHeight").value, 10) / 100,
+          letterSpacing: parseInt($("mLetterSpace").value, 10),
+          text: $("mText").value
+        };
+        if (slide && slide.isTitle) {
+          state.titleOverride = newOv;
+          $("editModal").classList.remove("open");
+          updateTitleSlideOnly();
+        } else if (slide) {
+          state.overrides[slide.lyricIdx] = newOv;
+          $("editModal").classList.remove("open");
+          renderPreview();
+        }
+        showToast("已套用單頁微調");
+      }
+    });
+
+    $("btnExportPptx").addEventListener("click", exportPptx);
+    initLineInAppGuard();
+    window.addEventListener("resize", renderPreview);
+    syncExternalSearchLinks();
+    syncStockPhotoLinks();
+    renderPreview();
+  </script>
+</body>
+</html>
