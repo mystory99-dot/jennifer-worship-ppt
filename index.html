@@ -2591,10 +2591,11 @@
 
     async function normalizeImageForPptx(dataUrl, fallbackExt) {
       if (!dataUrl || typeof dataUrl !== "string") return null;
-      const match = dataUrl.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/);
+      const match = dataUrl.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,([\s\S]+)$/);
       if (!match) return null;
       let rawMime = match[1].toLowerCase();
-      let b64 = match[2];
+      let b64 = match[2].replace(/\s+/g, "");
+      if (!b64) return null;
 
       if (rawMime === "image/jpg") rawMime = "image/jpeg";
 
@@ -2614,10 +2615,10 @@
             img.onerror = reject;
             img.src = dataUrl;
           });
-          const convMatch = converted.match(/^data:(image\/png);base64,(.+)$/);
+          const convMatch = converted.match(/^data:(image\/png);base64,([\s\S]+)$/);
           if (convMatch) {
             rawMime = "image/png";
-            b64 = convMatch[2];
+            b64 = convMatch[2].replace(/\s+/g, "");
           }
         } catch {
           // Fallback to declared extension if canvas conversion fails
@@ -2705,16 +2706,23 @@
       zip.file("docProps/core.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:dcmitype="http://purl.org/dc/dcmitype/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <dc:title>${xmlEsc(docTitle)}</dc:title>
+  <dc:subject>Worship Lyrics Presentation</dc:subject>
   <dc:creator>Worship PPT Generator</dc:creator>
+  <cp:keywords>worship,lyrics,pptx</cp:keywords>
+  <dc:description>Generated 16:9 Worship Lyrics Presentation</dc:description>
   <cp:lastModifiedBy>Worship PPT Generator</cp:lastModifiedBy>
+  <cp:revision>1</cp:revision>
   <dcterms:created xsi:type="dcterms:W3CDTF">${nowIso}</dcterms:created>
   <dcterms:modified xsi:type="dcterms:W3CDTF">${nowIso}</dcterms:modified>
 </cp:coreProperties>`);
 
       zip.file("docProps/app.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties" xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes">
+  <TotalTime>0</TotalTime>
+  <Words>0</Words>
   <Application>Microsoft Office PowerPoint</Application>
-  <PresentationFormat>Widescreen</PresentationFormat>
+  <PresentationFormat>On-screen Show (16:9)</PresentationFormat>
+  <Paragraphs>0</Paragraphs>
   <Slides>${slides.length}</Slides>
   <Notes>0</Notes>
   <HiddenSlides>0</HiddenSlides>
@@ -2798,9 +2806,10 @@ ${sldIdList}  </p:sldIdLst>
 </a:theme>`);
 
       // SlideMaster & independent SlideLayout
+      const stdGrpSpPr = `<p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr>`;
       zip.file("ppt/slideMasters/slideMaster1.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <p:sldMaster xmlns:a="${OOXML_NS.a}" xmlns:r="${OOXML_NS.r}" xmlns:p="${OOXML_NS.p}">
-  <p:cSld><p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr/></p:spTree></p:cSld>
+  <p:cSld><p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr>${stdGrpSpPr}</p:spTree></p:cSld>
   <p:clrMap bg1="lt1" tx1="dk1" bg2="lt2" tx2="dk2" accent1="accent1" accent2="accent2" accent3="accent3" accent4="accent4" accent5="accent5" accent6="accent6"/>
   <p:sldLayoutIdLst><p:sldLayoutId id="2147483649" r:id="rId1"/></p:sldLayoutIdLst>
   <p:txStyles><p:titleStyle/><p:bodyStyle/><p:otherStyle/></p:txStyles>
@@ -2812,7 +2821,7 @@ ${sldIdList}  </p:sldIdLst>
 
       zip.file("ppt/slideLayouts/slideLayout1.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <p:sldLayout xmlns:a="${OOXML_NS.a}" xmlns:r="${OOXML_NS.r}" xmlns:p="${OOXML_NS.p}" type="blank">
-  <p:cSld><p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr/></p:spTree></p:cSld>
+  <p:cSld><p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr>${stdGrpSpPr}</p:spTree></p:cSld>
   <p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr>
 </p:sldLayout>`);
       zip.file("ppt/slideLayouts/_rels/slideLayout1.xml.rels", buildRelsXml([
@@ -2836,9 +2845,9 @@ ${sldIdList}  </p:sldIdLst>
         if (imgFile) {
           slideRels.push({ id: "rId2", type: OOXML_NS.imageRel, target: `../media/${imgFile}` });
           bgXml = `<p:bg><p:bgPr><a:solidFill><a:srgbClr val="${hexNoHash(bgCfg.fadeBase)}"/></a:solidFill><a:effectLst/></p:bgPr></p:bg>`;
-          const amt = Math.max(0, Math.min(100000, Math.round((bgCfg.opacity ?? 100) * 1000)));
+          const amt = Math.max(1000, Math.min(100000, Math.round((bgCfg.opacity ?? 100) * 1000)));
           const alphaModXml = amt < 100000 ? `<a:alphaModFix amt="${amt}"/>` : "";
-          imgOverlayShape = `<p:pic><p:nvPicPr><p:cNvPr id="2" name="BgImage"/><p:cNvPicPr/><p:nvPr/></p:nvPicPr><p:blipFill><a:blip r:embed="rId2">${alphaModXml}</a:blip><a:stretch><a:fillRect/></a:stretch></p:blipFill><p:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="12192000" cy="6858000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr></p:pic>`;
+          imgOverlayShape = `<p:pic><p:nvPicPr><p:cNvPr id="2" name="BgImage"/><p:cNvPicPr><a:picLocks noChangeAspect="1"/></p:cNvPicPr><p:nvPr/></p:nvPicPr><p:blipFill><a:blip r:embed="rId2">${alphaModXml}</a:blip><a:stretch><a:fillRect/></a:stretch></p:blipFill><p:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="12192000" cy="6858000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr></p:pic>`;
         } else if (bgCfg.mode === "gradient") {
           const c1 = blendColor(bgCfg.gradC1, bgCfg.fadeBase, bgCfg.opacity);
           const c2 = blendColor(bgCfg.gradC2, bgCfg.fadeBase, bgCfg.opacity);
@@ -2892,7 +2901,7 @@ ${sldIdList}  </p:sldIdLst>
     ${bgXml}
     <p:spTree>
       <p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr>
-      <p:grpSpPr/>
+      ${stdGrpSpPr}
       ${imgOverlayShape}
       <p:sp>
         <p:nvSpPr><p:cNvPr id="3" name="LyricsBox"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr>
@@ -2910,6 +2919,8 @@ ${sldIdList}  </p:sldIdLst>
 
       return zip;
     }
+
+    let lastExportBlobUrl = null;
 
     async function exportPptx() {
       if (isLineInAppBrowser()) {
@@ -2957,12 +2968,19 @@ ${sldIdList}  </p:sldIdLst>
           getEffectiveBgFn: getEffectiveBg
         });
 
-        const base64Data = await zip.generateAsync({ type: "base64" });
-        const dataUri = `data:application/vnd.openxmlformats-officedocument.presentationml.presentation;base64,${base64Data}`;
+        const blob = await zip.generateAsync({
+          type: "blob",
+          mimeType: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          compression: "STORE"
+        });
+        if (lastExportBlobUrl) {
+          URL.revokeObjectURL(lastExportBlobUrl);
+        }
+        lastExportBlobUrl = URL.createObjectURL(blob);
         const safeName = (state.songTitle.trim() || "worship-slides").replace(/[\\/:*?"<>|]/g, "_") + ".pptx";
 
         const link = $("exportDirectLink");
-        link.href = dataUri;
+        link.href = lastExportBlobUrl;
         link.download = safeName;
         link.click();
 
