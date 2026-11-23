@@ -1,52 +1,58 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
+  <script>
+    // 1. 偵測並摧毀所有 Service Worker (離線複本的根本原因)
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function (registrations) {
+        if (registrations.length > 0) {
+          for (let registration of registrations) {
+            registration.unregister().then(function (boolean) {
+              if (boolean) {
+                console.log("已強行註銷 PWA！");
+                // 註銷成功後，立刻強制刷新，不使用任何快取
+                window.location.reload(true);
+              }
+            });
+          }
+        }
+      });
+    }
+
+    // 2. 徹底清空 Cache Storage 檔案庫
+    if ("caches" in window) {
+      caches.keys().then(function (keys) {
+        keys.forEach(function (key) {
+          caches.delete(key);
+        });
+      });
+    }
+
+    // 3. 網址時間戳驗證 + LINE 強制外開：若無 v 參數則加上時間戳破壞 CDN/本機快取
+    (function () {
+      const urlParams = new URLSearchParams(window.location.search);
+      const isLineOrWeChat = /Line\/|linesdk|micromessenger/i.test(navigator.userAgent || "");
+      let changed = false;
+
+      if (!urlParams.has("v")) {
+        urlParams.set("v", String(new Date().getTime()));
+        changed = true;
+      }
+      if (isLineOrWeChat && !urlParams.has("openExternalBrowser")) {
+        urlParams.set("openExternalBrowser", "1");
+        changed = true;
+      }
+      if (changed) {
+        window.location.search = urlParams.toString();
+      }
+    })();
+  </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
   <title>珍妮花的詩歌PPT輸入器</title>
-  <script>
-    // 強制登出與註銷所有可能導致離線複本的 Service Workers
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.getRegistrations().then(function (registrations) {
-        for (let registration of registrations) {
-          registration.unregister().then(function () {
-            console.log("已徹底註銷離線 Service Worker，確保加載最新線上版本！");
-          });
-        }
-      });
-    }
-    // 清除手機快取 Cache API
-    if ("caches" in window) {
-      caches.keys().then(function (names) {
-        for (let name of names) caches.delete(name);
-      });
-    }
-    // 若網址含有 ?openExternalBrowser=1，強制向伺服器確認並重新整理一次以避開離線複本
-    (function () {
-      var PAGE_BUILD_TAG = "20261123-pptxgenjs";
-      if (/[?&]openExternalBrowser=1\b/i.test(window.location.search)) {
-        try {
-          if (sessionStorage.getItem("worship_ppt_fresh_v") !== PAGE_BUILD_TAG) {
-            sessionStorage.setItem("worship_ppt_fresh_v", PAGE_BUILD_TAG);
-            window.location.reload(true);
-            return;
-          }
-        } catch (e) {
-          // ignore storage restriction
-        }
-      }
-      /* LINE 內建瀏覽器早期強制外開攔截器：一進入立即觸發 ?openExternalBrowser=1 跳出至手機預設 Safari / Chrome */
-      var ua = navigator.userAgent || "";
-      if (/Line\/|linesdk|micromessenger/i.test(ua)) {
-        if (!/[?&]openExternalBrowser=1\b/i.test(window.location.search)) {
-          window.location.href = window.location.href + (window.location.search ? "&" : "?") + "openExternalBrowser=1";
-        }
-      }
-    })();
-  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=LXGW+WenKai+TC:wght@400;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet" />
