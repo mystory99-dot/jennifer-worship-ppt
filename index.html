@@ -3,10 +3,42 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <title>珍妮花的詩歌PPT輸入器</title>
   <script>
-    /* LINE 內建瀏覽器早期強制外開攔截器：一進入立即觸發 ?openExternalBrowser=1 跳出至手機預設 Safari / Chrome */
+    // 強制登出與註銷所有可能導致離線複本的 Service Workers
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function (registrations) {
+        for (let registration of registrations) {
+          registration.unregister().then(function () {
+            console.log("已徹底註銷離線 Service Worker，確保加載最新線上版本！");
+          });
+        }
+      });
+    }
+    // 清除手機快取 Cache API
+    if ("caches" in window) {
+      caches.keys().then(function (names) {
+        for (let name of names) caches.delete(name);
+      });
+    }
+    // 若網址含有 ?openExternalBrowser=1，強制向伺服器確認並重新整理一次以避開離線複本
     (function () {
+      var PAGE_BUILD_TAG = "20261123-pptxgenjs";
+      if (/[?&]openExternalBrowser=1\b/i.test(window.location.search)) {
+        try {
+          if (sessionStorage.getItem("worship_ppt_fresh_v") !== PAGE_BUILD_TAG) {
+            sessionStorage.setItem("worship_ppt_fresh_v", PAGE_BUILD_TAG);
+            window.location.reload(true);
+            return;
+          }
+        } catch (e) {
+          // ignore storage restriction
+        }
+      }
+      /* LINE 內建瀏覽器早期強制外開攔截器：一進入立即觸發 ?openExternalBrowser=1 跳出至手機預設 Safari / Chrome */
       var ua = navigator.userAgent || "";
       if (/Line\/|linesdk|micromessenger/i.test(ua)) {
         if (!/[?&]openExternalBrowser=1\b/i.test(window.location.search)) {
