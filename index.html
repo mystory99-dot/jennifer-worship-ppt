@@ -1959,7 +1959,7 @@
           processed.push(pType);
           line = inlinePrefixMatch[2];
         } else {
-          line = line.replace(/^(?:\d+[\.\、\)]|\([一二三四五六七八九十\d]+\))\s*/, "");
+          line = line.replace(/^(?:[0-9０-９]+\s*[\.\．、\)）]|[\(（][0-9０-９一二三四五六七八九十]+[\)）])\s*/, "");
         }
 
         // Check for repeat suffix like (x2), x2, *2
@@ -3989,6 +3989,56 @@
         .trim();
     }
 
+    function sanitizeOcrLyricsLines(lines) {
+      const cleanedLines = [];
+      const sectionPrefixRe = /^(?:[\[\(【（]?\s*(?:副歌|主歌|橋段|前奏|間奏|尾奏|結尾|chorus|verse|bridge|refrain)\s*\d*\s*[\]\)】）]?[\s:：]+|[\[\(【（]\s*(?:副歌|主歌|橋段|前奏|間奏|尾奏|結尾|chorus|verse|bridge|refrain)\s*\d*\s*[\]\)】）]\s*)/i;
+      const sectionOnlyRe = /^[\[\(【（]?\s*(?:副歌|主歌|橋段|前奏|間奏|尾奏|結尾|chorus|verse|bridge|refrain)\s*\d*\s*[\]\)】）]?[\s:：]*$/i;
+      const numberPrefixRe = /^(?:[0-9０-９]+\s*[\.\．、\)）]|[\(（][0-9０-９一二三四五六七八九十]+[\)）])\s*/;
+
+      for (let rawLine of lines) {
+        let line = (rawLine || "")
+          .replace(/[\u200B-\u200D\uFEFF]/g, "")
+          .replace(/\u3000/g, " ")
+          .trim();
+        if (!line) continue;
+
+        // Remove leading section labels (副歌：, 主歌:, etc.) and verse numbers (1., 2., 1、, etc.)
+        let prev;
+        do {
+          prev = line;
+          if (sectionOnlyRe.test(line)) {
+            line = "";
+            break;
+          }
+          line = line.replace(sectionPrefixRe, "").trim();
+          line = line.replace(numberPrefixRe, "").trim();
+        } while (line !== prev && line.length > 0);
+
+        if (!line) continue;
+
+        // Remove decorative brackets/quotes while keeping English apostrophes
+        line = line.replace(/[「」『』（）()\[\]【】《》<>""“”‘’`*#@~～]+/g, " ");
+
+        // Split by full-width / half-width punctuation and strip punctuation
+        const clauses = line
+          .replace(/[，,。\.！!？?；;：:、…—－·•\/｜|]+/g, "\n")
+          .split("\n")
+          .map(s => s.replace(/[ \t]+/g, " ").trim())
+          .filter(Boolean);
+
+        for (const c of clauses) {
+          const subLines = typeof splitLongClause === "function" ? splitLongClause(c) : [c];
+          for (const sl of subLines) {
+            const trimmed = sl.trim();
+            if (trimmed) cleanedLines.push(trimmed);
+          }
+        }
+      }
+
+      // Collapse multiple blank lines into single newline (no empty lines)
+      return cleanedLines.join("\n");
+    }
+
     function parseOcrSongResult(rawText) {
       const lines = (rawText || "")
         .replace(/\r\n?/g, "\n")
@@ -4022,7 +4072,7 @@
 
       return {
         title,
-        lyrics: lyricLines.join("\n")
+        lyrics: sanitizeOcrLyricsLines(lyricLines)
       };
     }
 
