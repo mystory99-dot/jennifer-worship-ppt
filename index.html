@@ -4050,22 +4050,26 @@
       const lyricLines = [];
 
       for (const line of lines) {
-        // Check for title bracket pattern like 【每天的禱告】[國語]
+        // Check for title bracket pattern like 【每天的禱告】[國語], excluding language/section tags
         const bracketMatch = line.match(/[【\[]([^】\]]+)[】\]]/);
-        if (!title && bracketMatch && !/^(國語|台語|英語|粵語|客語|原住民語)$/.test(bracketMatch[1].trim())) {
+        if (
+          !title &&
+          bracketMatch &&
+          !/^(國語|台語|英語|粵語|客語|原住民語|副歌|主歌|橋段|前奏|間奏|尾奏|結尾|chorus|verse|bridge|refrain)\s*\d*$/i.test(bracketMatch[1].trim())
+        ) {
           title = bracketMatch[1].trim();
           continue;
         }
-        // Skip header/metadata lines
-        if (/^(?:詩集|詞|曲|與\s*曲|編曲|演唱|專輯|版權)\s*[:：]/.test(line) || /詩集\s*[:：]/.test(line) || /與?\s*曲\s*[:：]/.test(line)) {
+        // Only filter explicit header/metadata lines (詩集：, 詞：, 曲：, [國語], [台語], etc.)
+        if (/(?:詩集|詞|曲|詞曲|與\s*曲|編曲|演唱|專輯|版權)\s*[:：]/.test(line)) {
           continue;
         }
-        if (/^[\[【]?(國語|台語|英語|粵語)[\]】]?$/.test(line)) {
+        if (/^[\[【]?(國語|台語|英語|粵語|客語|原住民語)[\]】]?$/.test(line)) {
           continue;
         }
-        // Strip stray horizontal rule / edge OCR artifacts
+        // Strip stray horizontal rule / edge OCR artifacts, keep all verse/chorus lines
         const cleaned = line.replace(/^[\-_=—|~·•\s]+|[\-_=—|~·•\s]+$/g, "").trim();
-        if (cleaned.length >= 2) {
+        if (cleaned.length >= 1) {
           lyricLines.push(cleaned);
         }
       }
@@ -4074,6 +4078,85 @@
         title,
         lyrics: sanitizeOcrLyricsLines(lyricLines)
       };
+    }
+
+    async function preprocessOcrImage(fileOrBlob) {
+      const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(new Error("無法讀取圖片檔案"));
+        reader.readAsDataURL(fileOrBlob);
+      });
+
+      const img = await new Promise((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => resolve(image);
+        image.onerror = () => reject(new Error("圖片解碼失敗"));
+        image.src = dataUrl;
+      });
+
+      const srcW = img.naturalWidth || img.width || 800;
+      const srcH = img.naturalHeight || img.height || 600;
+      // Scale up 2x (if width < 1600px, upscale to 1600px-2000px for crisp CJK strokes)
+      const targetW = srcW < 1600
+        ? Math.min(2000, Math.max(1600, srcW * 2))
+        : Math.min(3200, srcW * 2);
+      const targetH = Math.max(1, Math.round(srcH * (targetW / srcW)));
+
+      const canvas = document.createElement("canvas");
+      canvas.width = targetW;
+      canvas.height = targetH;
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+      ctx.fillStyle = "#FFFFFF";
+      ctx.fillRect(0, 0, targetW, targetH);
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high";
+      ctx.drawImage(img, 0, 0, targetW, targetH);
+
+      const imgData = ctx.getImageData(0, 0, targetW, targetH);
+      const data = imgData.data;
+
+      // Sample luminance histogram to adaptively turn light/beige backgrounds pure white and text pure black
+      const hist = new Uint32Array(256);
+      let sampleCount = 0;
+      for (let i = 0; i < data.length; i += 16) {
+        const lum = Math.round(0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]);
+        hist[lum]++;
+        sampleCount++;
+      }
+      let acc = 0;
+      let bgLum = 240;
+      const p85 = Math.floor(sampleCount * 0.85);
+      for (let v = 0; v < 256; v++) {
+        acc += hist[v];
+        if (acc >= p85) {
+          bgLum = v;
+          break;
+        }
+      }
+
+      const whitePoint = Math.max(160, Math.min(238, bgLum - 16));
+      const blackPoint = Math.max(35, whitePoint - 95);
+      const span = Math.max(1, whitePoint - blackPoint);
+
+      for (let i = 0; i < data.length; i += 4) {
+        const lum = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+        let val;
+        if (lum >= whitePoint) {
+          val = 255;
+        } else if (lum <= blackPoint) {
+          val = 0;
+        } else {
+          val = Math.round(((lum - blackPoint) / span) * 255);
+        }
+        data[i] = val;
+        data[i + 1] = val;
+        data[i + 2] = val;
+        data[i + 3] = 255;
+      }
+
+      ctx.putImageData(imgData, 0, 0);
+      return canvas;
     }
 
     async function runOcrOnImageFile(fileOrBlob) {
@@ -4086,19 +4169,38 @@
       }
 
       statusEl.className = "status-note status-info show";
-      statusEl.textContent = "正在啟動繁體中文 OCR 辨識引擎，請稍候...";
+      statusEl.textContent = "正在進行影像放大與高對比強化，請稍候...";
       if (testBtn) testBtn.disabled = true;
 
       try {
-        const result = await Tesseract.recognize(fileOrBlob, "chi_tra", {
-          logger: (m) => {
-            if (m.status === "recognizing text" && typeof m.progress === "number") {
-              statusEl.textContent = `正在辨識圖片文字... ${Math.round(m.progress * 100)}%`;
-            } else if (m.status) {
-              statusEl.textContent = `正在準備 OCR 引擎（${m.status}）...`;
-            }
+        const processedCanvas = await preprocessOcrImage(fileOrBlob);
+        statusEl.textContent = "正在啟動繁體中文 OCR 辨識引擎，請稍候...";
+
+        const logger = (m) => {
+          if (m.status === "recognizing text" && typeof m.progress === "number") {
+            statusEl.textContent = `正在辨識圖片文字... ${Math.round(m.progress * 100)}%`;
+          } else if (m.status) {
+            statusEl.textContent = `正在準備 OCR 引擎（${m.status}）...`;
           }
-        });
+        };
+
+        let result;
+        if (typeof Tesseract.createWorker === "function") {
+          const worker = await Tesseract.createWorker("chi_tra", 1, { logger });
+          try {
+            await worker.setParameters({
+              tessedit_pageseg_mode: (Tesseract.PSM && Tesseract.PSM.SINGLE_BLOCK) ? Tesseract.PSM.SINGLE_BLOCK : "6"
+            });
+            result = await worker.recognize(processedCanvas);
+          } finally {
+            await worker.terminate();
+          }
+        } else {
+          result = await Tesseract.recognize(processedCanvas, "chi_tra", {
+            tessedit_pageseg_mode: "6",
+            logger
+          });
+        }
 
         const { title, lyrics } = parseOcrSongResult(result?.data?.text || "");
         if (!lyrics) {
@@ -4114,7 +4216,9 @@
           syncExternalSearchLinks();
         }
 
-        $("lyricsInput").value = lyrics;
+        const lyricsEl = $("lyricsInput");
+        lyricsEl.value = lyrics;
+        lyricsEl.scrollTop = 0;
         state.overrides = {};
         renderPreview();
 
