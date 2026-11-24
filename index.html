@@ -501,6 +501,87 @@
       border: 1px solid #d9d2c5;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
       display: block;
+      user-select: auto;
+      -webkit-user-select: auto;
+      -webkit-touch-callout: default;
+      pointer-events: auto;
+    }
+    .ocr-demo-body.uploaded-mode {
+      grid-template-columns: 1fr;
+    }
+    .ocr-demo-body.uploaded-mode .ocr-demo-preview {
+      max-width: 100%;
+      max-height: 380px;
+      width: auto;
+      margin: 0 auto;
+      cursor: zoom-in;
+    }
+    .ocr-uploaded-actions {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+    .ocr-uploaded-actions.show {
+      display: flex;
+    }
+    .ocr-proofread-tip {
+      display: none;
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: #f3ecff;
+      border: 1px solid #d5c4f7;
+      color: #4a2d7f;
+      font-size: 0.84rem;
+      line-height: 1.55;
+    }
+    .ocr-proofread-tip.show {
+      display: block;
+    }
+    .ocr-lightbox {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: rgba(15, 12, 24, 0.88);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .ocr-lightbox.open {
+      display: flex;
+    }
+    .ocr-lightbox-toolbar {
+      width: 100%;
+      max-width: 1100px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+      color: #ffffff;
+      font-size: 0.9rem;
+    }
+    .ocr-lightbox-img-wrap {
+      max-width: 100%;
+      max-height: calc(100vh - 90px);
+      overflow: auto;
+      border-radius: 10px;
+      background: #ffffff;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+    }
+    .ocr-lightbox-img-wrap img {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      user-select: auto;
+      -webkit-user-select: auto;
+      -webkit-touch-callout: default;
+      pointer-events: auto;
     }
     .ocr-demo-tips {
       font-size: 0.85rem;
@@ -1359,18 +1440,28 @@
         </label>
         <div id="ocrStatusBar" class="status-note status-info"></div>
 
-        <!-- 圖片格式示範區（以《每天的禱告》為範例） -->
+        <!-- 圖片格式示範區（上傳截圖後自動切換為原圖校對預覽） -->
         <div class="ocr-demo-card" id="ocrDemoCard">
           <div class="ocr-demo-header">
-            <strong style="color:var(--iris-deep); font-size:0.9rem;">💡 最佳辨識格式示範（白底/淺底黑字、橫式排版最佳）</strong>
-            <button type="button" class="btn btn-secondary btn-sm" id="ocrDemoToggleBtn">收合示範 ▲</button>
+            <strong id="ocrDemoTitle" style="color:var(--iris-deep); font-size:0.9rem;">💡 最佳辨識格式示範（白底/淺底黑字、橫式排版最佳）</strong>
+            <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+              <button type="button" class="btn btn-secondary btn-sm" id="btnRestoreDemoOcr" style="display:none;">恢復示範圖</button>
+              <button type="button" class="btn btn-secondary btn-sm" id="ocrDemoToggleBtn">收合示範 ▲</button>
+            </div>
           </div>
           <div class="ocr-demo-body" id="ocrDemoBody">
             <div>
               <canvas id="ocrDemoCanvas" width="600" height="460" style="display:none;"></canvas>
-              <img id="ocrDemoImg" class="ocr-demo-preview" alt="《每天的禱告》標準歌譜格式示範圖" />
+              <img id="ocrDemoImg" class="ocr-demo-preview" alt="《每天的禱告》標準歌譜格式示範圖" style="user-select: auto; -webkit-touch-callout: default; pointer-events: auto;" />
+              <div class="ocr-uploaded-actions" id="ocrUploadedActions">
+                <button type="button" class="btn btn-secondary btn-sm" id="btnZoomOcrImg">🔍 放大檢視原圖</button>
+                <button type="button" class="btn btn-accent btn-sm" id="btnReRunOcr">🔄 重新辨識此圖</button>
+              </div>
+              <div class="ocr-proofread-tip" id="ocrProofreadTip">
+                💡 校對小撇步：若歌詞有個別錯字，可直接【長按上方圖片中的文字】或點【放大檢視】來選取複製正確文字，再到下方歌詞框貼上修改！
+              </div>
             </div>
-            <div>
+            <div id="ocrDemoInfoCol">
               <div style="font-weight:700; color:var(--iris-deep); font-size:0.92rem; margin-bottom:6px;">
                 範例：《每天的禱告》標準歌譜截圖
               </div>
@@ -1381,6 +1472,16 @@
               </ul>
               <button type="button" class="btn btn-accent" id="btnTestDemoOcr">⚡ 用這張示範圖測試 OCR 辨識</button>
             </div>
+          </div>
+        </div>
+        <!-- 全螢幕燈箱：放大檢視已上傳歌譜原圖 -->
+        <div class="ocr-lightbox" id="ocrLightbox" role="dialog" aria-modal="true" aria-label="放大檢視歌譜原圖">
+          <div class="ocr-lightbox-toolbar">
+            <span>🔍 可長按圖片中的文字選取並複製（手機／電腦皆支援）</span>
+            <button type="button" class="btn btn-secondary btn-sm" id="btnCloseOcrLightbox">✕ 關閉</button>
+          </div>
+          <div class="ocr-lightbox-img-wrap">
+            <img id="ocrLightboxImg" alt="放大檢視歌譜原圖" style="user-select: auto; -webkit-touch-callout: default; pointer-events: auto;" />
           </div>
         </div>
       </div>
@@ -4162,6 +4263,7 @@
     async function runOcrOnImageFile(fileOrBlob) {
       const statusEl = $("ocrStatusBar");
       const testBtn = $("btnTestDemoOcr");
+      const reRunBtn = $("btnReRunOcr");
       if (typeof Tesseract === "undefined" || !Tesseract.recognize) {
         statusEl.className = "status-note status-warn show";
         statusEl.textContent = "OCR 辨識引擎仍在載入中或網路連線受限，請稍候再試。";
@@ -4171,6 +4273,7 @@
       statusEl.className = "status-note status-info show";
       statusEl.textContent = "正在進行影像放大與高對比強化，請稍候...";
       if (testBtn) testBtn.disabled = true;
+      if (reRunBtn) reRunBtn.disabled = true;
 
       try {
         const processedCanvas = await preprocessOcrImage(fileOrBlob);
@@ -4234,20 +4337,131 @@
         statusEl.textContent = `圖片辨識失敗：${err?.message || "未知錯誤"}`;
       } finally {
         if (testBtn) testBtn.disabled = false;
+        if (reRunBtn) reRunBtn.disabled = false;
       }
     }
 
     function initOcrControls() {
       renderOcrDemoCanvas();
 
+      let uploadedOcrFile = null;
+      let uploadedOcrUrl = "";
+      let isUploadedPreview = false;
+
+      const demoTitle = $("ocrDemoTitle");
+      const demoImg = $("ocrDemoImg");
+      const demoBody = $("ocrDemoBody");
+      const demoInfoCol = $("ocrDemoInfoCol");
+      const toggleBtn = $("ocrDemoToggleBtn");
+      const restoreBtn = $("btnRestoreDemoOcr");
+      const uploadedActions = $("ocrUploadedActions");
+      const proofreadTip = $("ocrProofreadTip");
+      const zoomBtn = $("btnZoomOcrImg");
+      const reRunBtn = $("btnReRunOcr");
+      const lightbox = $("ocrLightbox");
+      const lightboxImg = $("ocrLightboxImg");
+      const closeLightboxBtn = $("btnCloseOcrLightbox");
+
+      const updateToggleLabel = () => {
+        if (!toggleBtn || !demoBody) return;
+        const collapsed = demoBody.classList.contains("collapsed");
+        if (isUploadedPreview) {
+          toggleBtn.textContent = collapsed ? "展開截圖 ▼" : "收合截圖 ▲";
+        } else {
+          toggleBtn.textContent = collapsed ? "展開示範 ▼" : "收合示範 ▲";
+        }
+      };
+
+      const showUploadedOcrPreview = (file) => {
+        uploadedOcrFile = file;
+        if (uploadedOcrUrl) URL.revokeObjectURL(uploadedOcrUrl);
+        uploadedOcrUrl = URL.createObjectURL(file);
+        isUploadedPreview = true;
+
+        if (demoTitle) demoTitle.textContent = "🖼️ 已上傳的歌譜截圖（可對照下方歌詞框檢查錯字）";
+        if (demoImg) {
+          demoImg.src = uploadedOcrUrl;
+          demoImg.alt = "已上傳的歌譜截圖";
+        }
+        if (demoBody) {
+          demoBody.classList.remove("collapsed");
+          demoBody.classList.add("uploaded-mode");
+        }
+        if (demoInfoCol) demoInfoCol.style.display = "none";
+        if (restoreBtn) restoreBtn.style.display = "";
+        if (uploadedActions) uploadedActions.classList.add("show");
+        if (proofreadTip) proofreadTip.classList.add("show");
+        updateToggleLabel();
+      };
+
+      const restoreDemoOcrPreview = () => {
+        isUploadedPreview = false;
+        if (demoTitle) demoTitle.textContent = "💡 最佳辨識格式示範（白底/淺底黑字、橫式排版最佳）";
+        const canvas = $("ocrDemoCanvas");
+        if (demoImg && canvas) {
+          demoImg.src = canvas.toDataURL("image/png");
+          demoImg.alt = "《每天的禱告》標準歌譜格式示範圖";
+        }
+        if (demoBody) demoBody.classList.remove("uploaded-mode");
+        if (demoInfoCol) demoInfoCol.style.display = "";
+        if (restoreBtn) restoreBtn.style.display = "none";
+        if (uploadedActions) uploadedActions.classList.remove("show");
+        if (proofreadTip) proofreadTip.classList.remove("show");
+        updateToggleLabel();
+      };
+
+      const openOcrLightbox = () => {
+        if (!lightbox || !lightboxImg || !demoImg || !demoImg.src) return;
+        lightboxImg.src = demoImg.src;
+        lightbox.classList.add("open");
+      };
+
+      const closeOcrLightbox = () => {
+        if (!lightbox) return;
+        lightbox.classList.remove("open");
+      };
+
       const fileInput = $("ocrImageInput");
       if (fileInput) {
         fileInput.addEventListener("change", (e) => {
           const file = e.target.files?.[0];
           if (file) {
+            showUploadedOcrPreview(file);
             runOcrOnImageFile(file);
             e.target.value = "";
           }
+        });
+      }
+
+      if (restoreBtn) {
+        restoreBtn.addEventListener("click", restoreDemoOcrPreview);
+      }
+
+      if (zoomBtn) {
+        zoomBtn.addEventListener("click", openOcrLightbox);
+      }
+      if (demoImg) {
+        demoImg.addEventListener("click", () => {
+          if (isUploadedPreview) openOcrLightbox();
+        });
+      }
+      if (closeLightboxBtn) {
+        closeLightboxBtn.addEventListener("click", closeOcrLightbox);
+      }
+      if (lightbox) {
+        lightbox.addEventListener("click", (e) => {
+          if (e.target === lightbox) closeOcrLightbox();
+        });
+      }
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && lightbox && lightbox.classList.contains("open")) {
+          closeOcrLightbox();
+        }
+      });
+
+      if (reRunBtn) {
+        reRunBtn.addEventListener("click", () => {
+          if (uploadedOcrFile) runOcrOnImageFile(uploadedOcrFile);
         });
       }
 
@@ -4267,12 +4481,10 @@
         });
       }
 
-      const toggleBtn = $("ocrDemoToggleBtn");
-      const demoBody = $("ocrDemoBody");
       if (toggleBtn && demoBody) {
         toggleBtn.addEventListener("click", () => {
-          const collapsed = demoBody.classList.toggle("collapsed");
-          toggleBtn.textContent = collapsed ? "展開示範 ▼" : "收合示範 ▲";
+          demoBody.classList.toggle("collapsed");
+          updateToggleLabel();
         });
       }
     }
