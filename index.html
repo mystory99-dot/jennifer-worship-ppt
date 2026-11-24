@@ -1040,6 +1040,34 @@
       display: inline-block;
       margin: 0 2px;
     }
+    .fallback-key-btn {
+      cursor: pointer;
+      text-decoration: underline;
+      font-family: inherit;
+      font-size: inherit;
+      line-height: inherit;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    }
+    .fallback-key-btn:hover {
+      background: #fce7f3;
+      box-shadow: 0 1px 4px rgba(184, 29, 101, 0.22);
+      transform: translateY(-1px);
+    }
+    @keyframes ocrUploadPulse {
+      0%, 100% {
+        box-shadow: 0 0 0 0 rgba(184, 29, 101, 0);
+        border-color: var(--iris-border);
+        background: transparent;
+      }
+      25%, 75% {
+        box-shadow: 0 0 0 5px rgba(184, 29, 101, 0.28);
+        border-color: #b81d65;
+        background: #fdf2f8;
+      }
+    }
+    .ocr-upload-highlight {
+      animation: ocrUploadPulse 0.75s ease-in-out 2;
+    }
     .song-search-actions {
       display: flex;
       flex-wrap: wrap;
@@ -1316,7 +1344,7 @@
             </div>
             <div id="searchStatusMsg" class="search-status-msg" role="status" aria-live="polite"></div>
             <div class="song-fallback-search">
-              <div class="song-fallback-label">🔍 若自動搜尋不到，可至以下網站手動搜尋，直接「<span class="fallback-key">複製</span>」文字或「<span class="fallback-key">截圖</span>」上傳（將開啟新網頁）：</div>
+              <div class="song-fallback-label">🔍 若自動搜尋不到，可至以下網站手動搜尋，直接「<span class="fallback-key">複製</span>」文字或「<button type="button" class="fallback-key fallback-key-btn" data-scroll-to-ocr>截圖</button>」上傳（將開啟新網頁）：</div>
               <div class="song-search-actions">
                 <a href="https://www.christianstudy.com/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" id="christianStudySearchBtn" data-external-search="christianstudy" onclick="return window.forceOpenNewTab(event, 'https://www.christianstudy.com/');">⚔️ 武林英雄帖</a>
                 <a href="https://taiwanbible.com/web/lyrics/index.jsp" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" id="taiwanBibleSearchBtn" data-external-search="taiwanbible" onclick="return window.forceOpenNewTab(event, 'https://taiwanbible.com/web/lyrics/index.jsp');">📖 台灣聖經網</a>
@@ -1431,7 +1459,7 @@
           <strong style="color:var(--iris-deep); font-size:0.96rem;">📷 圖片轉歌詞（上傳歌譜／歌詞截圖自動辨識）</strong>
           <span style="font-size:0.82rem; color:var(--text-muted);">支援繁體中文歌譜截圖，自動擷取歌名與歌詞</span>
         </div>
-        <label class="upload-box" for="ocrImageInput" style="display:block; padding:14px;">
+        <label class="upload-box" id="ocrUploadBox" for="ocrImageInput" style="display:block; padding:14px;">
           <div>點擊上傳歌譜／歌詞截圖（JPG / PNG / WebP）進行繁體中文 OCR 辨識</div>
           <div style="font-size:0.8rem; color:var(--text-muted); margin-top:4px;">
             建議使用白底或淺底黑字、橫式排版的清晰截圖，辨識準確率最高
@@ -1458,7 +1486,7 @@
                 <button type="button" class="btn btn-accent btn-sm" id="btnReRunOcr">🔄 重新辨識此圖</button>
               </div>
               <div class="ocr-proofread-tip" id="ocrProofreadTip">
-                💡 校對小撇步：若歌詞有個別錯字，可直接【長按上方圖片中的文字】或點【放大檢視】來選取複製正確文字，再到下方歌詞框貼上修改！
+                💡 校對小撇步：若歌詞有個別錯字，可對照上方圖片直接點擊下方歌詞框修改；或【長按上方圖片 ➔ 點選「使用 Google 智慧鏡頭搜尋圖片」】即可框選複製圖片中的文字！
               </div>
             </div>
             <div id="ocrDemoInfoCol">
@@ -3515,7 +3543,37 @@
       return t.includes("奇異恩典 何等甘甜") && t.includes("真是何等寶貴");
     }
 
-    function setSearchStatusMsg(type, text) {
+    function escapeHtmlText(str) {
+      return String(str || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function scrollToOcrUpload() {
+      const uploadBox = $("ocrUploadBox") || $("ocrLyricsSection");
+      if (!uploadBox) return;
+      uploadBox.scrollIntoView({ behavior: "smooth", block: "center" });
+      uploadBox.classList.remove("ocr-upload-highlight");
+      void uploadBox.offsetWidth;
+      uploadBox.classList.add("ocr-upload-highlight");
+      clearTimeout(window.__ocrHighlightTimer);
+      window.__ocrHighlightTimer = setTimeout(() => {
+        uploadBox.classList.remove("ocr-upload-highlight");
+      }, 1500);
+    }
+
+    document.addEventListener("click", (e) => {
+      const trigger = e.target.closest("[data-scroll-to-ocr]");
+      if (trigger) {
+        e.preventDefault();
+        scrollToOcrUpload();
+      }
+    });
+
+    function setSearchStatusMsg(type, text, isHtml = false) {
       const box = $("searchStatusMsg");
       if (!box) return;
       if (!type || !text) {
@@ -3524,7 +3582,16 @@
         return;
       }
       box.className = `search-status-msg show ${type}`;
-      box.textContent = text;
+      if (isHtml) {
+        box.innerHTML = text;
+      } else {
+        box.textContent = text;
+      }
+    }
+
+    function buildSearchNotFoundHtml(title) {
+      const safeTitle = escapeHtmlText(title);
+      return `⚠️ 找不到「${safeTitle}」的自動歌詞！請直接點選下方的「武林英雄帖、台灣聖經網、Google 或 KKBOX」網站搜尋，並【複製】文字或【<button type="button" class="fallback-key fallback-key-btn" data-scroll-to-ocr>截圖</button>】上傳。`;
     }
 
     function applyLyricsMatch(item, statusEl) {
@@ -3599,9 +3666,9 @@
               state.overrides = {};
               renderPreview();
             }
-            setSearchStatusMsg("warn", `⚠️ 找不到「${title}」的自動歌詞！請直接點選下方的「武林英雄帖、台灣聖經網、Google 或 KKBOX」網站搜尋，並【複製】文字或【截圖】上傳。`);
-            status.className = "status-note status-warn show";
-            status.innerHTML = `<span>未找到歌名完全相符的「${title}」，請從下方相關曲目點選，或改用外部搜尋：</span>${buildExternalSearchButtonsHtml(title)}`;
+            setSearchStatusMsg("warn", buildSearchNotFoundHtml(title), true);
+            status.className = "status-note";
+            status.innerHTML = "";
             syncExternalSearchLinks();
           }
 
@@ -3634,9 +3701,9 @@
         state.overrides = {};
         renderPreview();
       }
-      setSearchStatusMsg("warn", `⚠️ 找不到「${title}」的自動歌詞！請直接點選下方的「武林英雄帖、台灣聖經網、Google 或 KKBOX」網站搜尋，並【複製】文字或【截圖】上傳。`);
-      status.className = "status-note status-warn show";
-      status.innerHTML = `<span>線上曲庫暫無「${title}」，可點右側搜尋並貼回下方一鍵斷句：</span>${buildExternalSearchButtonsHtml(title)}`;
+      setSearchStatusMsg("warn", buildSearchNotFoundHtml(title), true);
+      status.className = "status-note";
+      status.innerHTML = "";
       syncExternalSearchLinks();
       btn.disabled = false;
       btn.textContent = "✨ 一鍵搜尋歌詞";
