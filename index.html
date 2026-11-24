@@ -51,6 +51,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=LXGW+WenKai+TC:wght@400;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/gh/gitbrent/PptxGenJS@3.12.0/dist/pptxgen.bundle.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js" defer></script>
   <style>
     :root {
       --iris-deep: #523775;
@@ -445,6 +446,68 @@
     }
     .upload-box:hover { background: #f2eafc; }
     .upload-box input[type="file"] { display: none; }
+
+    /* OCR Lyrics & Format Demo */
+    .ocr-panel {
+      background: #fdfbff;
+      border: 1px solid var(--iris-border);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      margin-bottom: 16px;
+    }
+    .ocr-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+    .ocr-demo-card {
+      margin-top: 12px;
+      background: #ffffff;
+      border: 1px solid var(--iris-border);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+    }
+    .ocr-demo-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .ocr-demo-body {
+      margin-top: 12px;
+      display: grid;
+      grid-template-columns: minmax(0, 320px) minmax(0, 1fr);
+      gap: 16px;
+      align-items: center;
+    }
+    .ocr-demo-body.collapsed {
+      display: none;
+    }
+    @media (max-width: 720px) {
+      .ocr-demo-body {
+        grid-template-columns: 1fr;
+      }
+    }
+    .ocr-demo-preview {
+      width: 100%;
+      max-width: 320px;
+      height: auto;
+      border-radius: 8px;
+      border: 1px solid #d9d2c5;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      display: block;
+    }
+    .ocr-demo-tips {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin: 0 0 12px 0;
+      padding-left: 18px;
+    }
 
     .sub-panel {
       background: var(--iris-bg);
@@ -1185,6 +1248,47 @@
                 <button type="button" class="pill-btn active" data-base="#ffffff">白底淡化</button>
                 <button type="button" class="pill-btn" data-base="#000000">黑底加深</button>
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- OCR: Image to Lyrics + Format Demo -->
+      <div class="ocr-panel" id="ocrLyricsSection">
+        <div class="ocr-panel-header">
+          <strong style="color:var(--iris-deep); font-size:0.96rem;">📷 圖片轉歌詞（上傳歌譜／歌詞截圖自動辨識）</strong>
+          <span style="font-size:0.82rem; color:var(--text-muted);">支援繁體中文歌譜截圖，自動擷取歌名與歌詞</span>
+        </div>
+        <label class="upload-box" for="ocrImageInput" style="display:block; padding:14px;">
+          <div>點擊上傳歌譜／歌詞截圖（JPG / PNG / WebP）進行繁體中文 OCR 辨識</div>
+          <div style="font-size:0.8rem; color:var(--text-muted); margin-top:4px;">
+            建議使用白底或淺底黑字、橫式排版的清晰截圖，辨識準確率最高
+          </div>
+          <input type="file" id="ocrImageInput" accept="image/jpeg,image/png,image/webp,image/bmp" />
+        </label>
+        <div id="ocrStatusBar" class="status-note status-info"></div>
+
+        <!-- 圖片格式示範區（以《每天的禱告》為範例） -->
+        <div class="ocr-demo-card" id="ocrDemoCard">
+          <div class="ocr-demo-header">
+            <strong style="color:var(--iris-deep); font-size:0.9rem;">💡 最佳辨識格式示範（白底/淺底黑字、橫式排版最佳）</strong>
+            <button type="button" class="btn btn-secondary btn-sm" id="ocrDemoToggleBtn">收合示範 ▲</button>
+          </div>
+          <div class="ocr-demo-body" id="ocrDemoBody">
+            <div>
+              <canvas id="ocrDemoCanvas" width="600" height="460" style="display:none;"></canvas>
+              <img id="ocrDemoImg" class="ocr-demo-preview" alt="《每天的禱告》標準歌譜格式示範圖" />
+            </div>
+            <div>
+              <div style="font-weight:700; color:var(--iris-deep); font-size:0.92rem; margin-bottom:6px;">
+                範例：《每天的禱告》標準歌譜截圖
+              </div>
+              <ul class="ocr-demo-tips">
+                <li><strong>淺色單純底色：</strong>柔和米黃或白底，文字與背景對比清晰。</li>
+                <li><strong>橫式清晰字體：</strong>歌名置於上方（如【每天的禱告】），下方歌詞逐行對齊。</li>
+                <li><strong>一鍵實測體驗：</strong>點擊下方按鈕，直接以這張 Canvas 示範圖執行繁體中文 OCR 辨識，自動填入歌名與 8 行歌詞並更新預覽。</li>
+              </ul>
+              <button type="button" class="btn btn-accent" id="btnTestDemoOcr">⚡ 用這張示範圖測試 OCR 辨識</button>
             </div>
           </div>
         </div>
@@ -3624,7 +3728,218 @@
       }
     });
 
+    /* =========================================================================
+     * 9. IMAGE TO LYRICS (TESSERACT.JS OCR) & FORMAT DEMO CANVAS
+     * ========================================================================= */
+    function renderOcrDemoCanvas() {
+      const canvas = $("ocrDemoCanvas");
+      const img = $("ocrDemoImg");
+      if (!canvas || !img) return;
+      const ctx = canvas.getContext("2d");
+      const W = 600;
+      const H = 460;
+      canvas.width = W;
+      canvas.height = H;
+
+      // 1. 柔和米黃色背景
+      ctx.fillStyle = "#FAF8DC";
+      ctx.fillRect(0, 0, W, H);
+
+      // 2. 上方標題區
+      ctx.textBaseline = "top";
+      ctx.fillStyle = "#2B4C7E";
+      ctx.font = 'bold 28px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
+      ctx.fillText("【每天的禱告】[國語]", 28, 28);
+
+      ctx.fillStyle = "#333333";
+      ctx.font = '16px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
+      ctx.fillText("詩集：興起，9 與 曲：陳淑貞", 32, 70);
+
+      // 3. 橫向分隔線（藍綠色粗橫線）
+      ctx.strokeStyle = "#008B8B";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(28, 106);
+      ctx.lineTo(W - 28, 106);
+      ctx.stroke();
+
+      // 4. 中間歌詞區（黑色清晰字體 20px，行距適中）
+      const demoLines = [
+        "主！我心愛你，我渴望活在你的懷裡，",
+        "每天與你同在，享受你的大愛。",
+        "醫治我受傷的心靈，改變我原有的生命，",
+        "引導我當走的路，今天的服事求你托住。",
+        "哦！主啊！求你改變我，心思意念願你來雕琢，",
+        "使我能更加像你，帶著耶穌的香氣。",
+        "哦！主啊！求你吸引我，帶我進入你聖潔居所，",
+        "讓我今天為你活，完全獻上為活祭，奉獻一生跟隨你。"
+      ];
+      ctx.fillStyle = "#111111";
+      ctx.font = '20px "Microsoft JhengHei", "Noto Sans TC", sans-serif';
+      let y = 130;
+      const lineHeight = 36;
+      for (const line of demoLines) {
+        ctx.fillText(line, 32, y);
+        y += lineHeight;
+      }
+
+      // 5. 底部裝飾線（藍綠色粗橫線）
+      ctx.strokeStyle = "#008B8B";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(28, 428);
+      ctx.lineTo(W - 28, 428);
+      ctx.stroke();
+
+      img.src = canvas.toDataURL("image/png");
+    }
+
+    function normalizeOcrCjkSpaces(str) {
+      // Remove spaces between CJK characters and punctuation that Tesseract chi_tra inserts
+      return str
+        .replace(/([\u4e00-\u9fff\u3000-\u303f\uff00-\uffef])\s+(?=[\u4e00-\u9fff\u3000-\u303f\uff00-\uffef])/g, "$1")
+        .replace(/([\u4e00-\u9fff\u3000-\u303f\uff00-\uffef])\s+([,!?.;:])/g, "$1$2")
+        .replace(/([,!?.;:])\s+([\u4e00-\u9fff\u3000-\u303f\uff00-\uffef])/g, "$1$2")
+        .replace(/[ \t]+/g, " ")
+        .trim();
+    }
+
+    function parseOcrSongResult(rawText) {
+      const lines = (rawText || "")
+        .replace(/\r\n?/g, "\n")
+        .split("\n")
+        .map(l => normalizeOcrCjkSpaces(l))
+        .filter(Boolean);
+
+      let title = "";
+      const lyricLines = [];
+
+      for (const line of lines) {
+        // Check for title bracket pattern like 【每天的禱告】[國語]
+        const bracketMatch = line.match(/[【\[]([^】\]]+)[】\]]/);
+        if (!title && bracketMatch && !/^(國語|台語|英語|粵語|客語|原住民語)$/.test(bracketMatch[1].trim())) {
+          title = bracketMatch[1].trim();
+          continue;
+        }
+        // Skip header/metadata lines
+        if (/^(?:詩集|詞|曲|與\s*曲|編曲|演唱|專輯|版權)\s*[:：]/.test(line) || /詩集\s*[:：]/.test(line) || /與?\s*曲\s*[:：]/.test(line)) {
+          continue;
+        }
+        if (/^[\[【]?(國語|台語|英語|粵語)[\]】]?$/.test(line)) {
+          continue;
+        }
+        // Strip stray horizontal rule / edge OCR artifacts
+        const cleaned = line.replace(/^[\-_=—|~·•\s]+|[\-_=—|~·•\s]+$/g, "").trim();
+        if (cleaned.length >= 2) {
+          lyricLines.push(cleaned);
+        }
+      }
+
+      return {
+        title,
+        lyrics: lyricLines.join("\n")
+      };
+    }
+
+    async function runOcrOnImageFile(fileOrBlob) {
+      const statusEl = $("ocrStatusBar");
+      const testBtn = $("btnTestDemoOcr");
+      if (typeof Tesseract === "undefined" || !Tesseract.recognize) {
+        statusEl.className = "status-note status-warn show";
+        statusEl.textContent = "OCR 辨識引擎仍在載入中或網路連線受限，請稍候再試。";
+        return;
+      }
+
+      statusEl.className = "status-note status-info show";
+      statusEl.textContent = "正在啟動繁體中文 OCR 辨識引擎，請稍候...";
+      if (testBtn) testBtn.disabled = true;
+
+      try {
+        const result = await Tesseract.recognize(fileOrBlob, "chi_tra", {
+          logger: (m) => {
+            if (m.status === "recognizing text" && typeof m.progress === "number") {
+              statusEl.textContent = `正在辨識圖片文字... ${Math.round(m.progress * 100)}%`;
+            } else if (m.status) {
+              statusEl.textContent = `正在準備 OCR 引擎（${m.status}）...`;
+            }
+          }
+        });
+
+        const { title, lyrics } = parseOcrSongResult(result?.data?.text || "");
+        if (!lyrics) {
+          statusEl.className = "status-note status-warn show";
+          statusEl.textContent = "未能從圖片中辨識出清晰歌詞，請確認圖片為淺底黑字、橫式排版後再試。";
+          return;
+        }
+
+        if (title) {
+          $("songTitleInput").value = title;
+          state.songTitle = title;
+          if (state.titleOverride) delete state.titleOverride.text;
+          syncExternalSearchLinks();
+        }
+
+        $("lyricsInput").value = lyrics;
+        state.overrides = {};
+        renderPreview();
+
+        const lineCount = lyrics.split("\n").filter(Boolean).length;
+        statusEl.className = "status-note status-info show";
+        statusEl.textContent = title
+          ? `✅ 辨識完成！已自動擷取歌名「${title}」與 ${lineCount} 行歌詞，並更新簡報預覽。`
+          : `✅ 辨識完成！已自動填入 ${lineCount} 行歌詞並更新簡報預覽。`;
+        showToast(title ? `OCR 辨識完成：${title}（${lineCount} 行）` : `OCR 辨識完成（${lineCount} 行）`);
+      } catch (err) {
+        console.error("OCR error:", err);
+        statusEl.className = "status-note status-warn show";
+        statusEl.textContent = `圖片辨識失敗：${err?.message || "未知錯誤"}`;
+      } finally {
+        if (testBtn) testBtn.disabled = false;
+      }
+    }
+
+    function initOcrControls() {
+      renderOcrDemoCanvas();
+
+      const fileInput = $("ocrImageInput");
+      if (fileInput) {
+        fileInput.addEventListener("change", (e) => {
+          const file = e.target.files?.[0];
+          if (file) {
+            runOcrOnImageFile(file);
+            e.target.value = "";
+          }
+        });
+      }
+
+      const testBtn = $("btnTestDemoOcr");
+      if (testBtn) {
+        testBtn.addEventListener("click", () => {
+          const canvas = $("ocrDemoCanvas");
+          if (!canvas) return;
+          canvas.toBlob((blob) => {
+            if (!blob) {
+              showToast("無法產生示範圖檔，請重試");
+              return;
+            }
+            const demoFile = new File([blob], "每天的禱告-示範圖.png", { type: "image/png" });
+            runOcrOnImageFile(demoFile);
+          }, "image/png");
+        });
+      }
+
+      const toggleBtn = $("ocrDemoToggleBtn");
+      const demoBody = $("ocrDemoBody");
+      if (toggleBtn && demoBody) {
+        toggleBtn.addEventListener("click", () => {
+          const collapsed = demoBody.classList.toggle("collapsed");
+          toggleBtn.textContent = collapsed ? "展開示範 ▼" : "收合示範 ▲";
+        });
+      }
+    }
+
     $("btnExportPptx").addEventListener("click", exportPptx);
+    initOcrControls();
     initLineInAppGuard();
     window.addEventListener("resize", renderPreview);
     syncExternalSearchLinks();
