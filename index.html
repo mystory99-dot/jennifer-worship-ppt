@@ -878,15 +878,15 @@
     .hidden { display: none !important; }
 
     .song-search-actions {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      display: flex;
+      flex-wrap: wrap;
       gap: 8px;
       width: 100%;
-      margin-top: 6px;
+      margin-top: 8px;
     }
     .song-search-actions .btn {
-      width: 100%;
-      padding: 8px 6px;
+      flex: 1 1 116px;
+      padding: 8px 10px;
       font-size: 0.84rem;
     }
     .online-photo-actions {
@@ -1149,8 +1149,10 @@
             <input type="text" id="songTitleInput" value="奇異恩典" placeholder="輸入歌名，例如：奇異恩典" style="width:100%; display:block;" />
             <div class="song-search-actions">
               <button type="button" class="btn btn-accent btn-sm" id="btnAutoSearchLyrics">🔍 一鍵搜尋歌詞</button>
-              <a href="https://lyrics.kkbox.com/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" id="kkboxSearchBtn" data-external-search="kkbox" onclick="return window.forceOpenNewTab(event, 'https://lyrics.kkbox.com/');">🎵 KKBOX 搜尋</a>
+              <a href="https://www.christianstudy.com/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" id="christianStudySearchBtn" data-external-search="christianstudy" onclick="return window.forceOpenNewTab(event, 'https://www.christianstudy.com/');">⚔️ 武林英雄帖</a>
+              <a href="https://taiwanbible.com/web/lyrics/index.jsp" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" id="taiwanBibleSearchBtn" data-external-search="taiwanbible" onclick="return window.forceOpenNewTab(event, 'https://taiwanbible.com/web/lyrics/index.jsp');">📖 台灣聖經網</a>
               <a href="https://www.google.com/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" id="googleSearchBtn" data-external-search="google" onclick="return window.forceOpenNewTab(event, 'https://www.google.com/');">🌐 Google 搜尋</a>
+              <a href="https://lyrics.kkbox.com/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" id="kkboxSearchBtn" data-external-search="kkbox" onclick="return window.forceOpenNewTab(event, 'https://lyrics.kkbox.com/');">🎵 KKBOX 搜尋</a>
             </div>
             <div id="lyricsSearchStatus" class="status-note status-info"></div>
             <div id="lyricsSearchChoices" class="pill-group" style="margin-top:6px;"></div>
@@ -3092,11 +3094,23 @@
 
       // 動態生成搜尋網址 (加防快取時間戳)
       let targetUrl = url;
-      if (url.includes('google.com')) {
-        targetUrl = 'https://www.google.com/search?q=' + encodeURIComponent(songTitle + ' 歌詞') + '&t=' + Date.now();
-      } else if (url.includes('kbox') || url.includes('kkbox')) {
-        const q = songTitle ? encodeURIComponent(songTitle + ' 歌詞') : '';
-        targetUrl = q ? 'https://www.google.com/search?q=' + q + '+site:lyrics.kkbox.com' + '&t=' + Date.now() : 'https://lyrics.kkbox.com/';
+      const cacheBuster = "&t=" + Date.now();
+      if (url.includes("christianstudy")) {
+        targetUrl = songTitle
+          ? "https://www.google.com/search?q=" + encodeURIComponent(songTitle + " site:christianstudy.com") + cacheBuster
+          : "https://www.christianstudy.com/?t=" + Date.now();
+      } else if (url.includes("taiwanbible")) {
+        targetUrl = songTitle
+          ? "https://www.google.com/search?q=" + encodeURIComponent(songTitle + " site:taiwanbible.com/web/lyrics") + cacheBuster
+          : "https://taiwanbible.com/web/lyrics/index.jsp?t=" + Date.now();
+      } else if (url.includes("google.com")) {
+        targetUrl = songTitle
+          ? "https://www.google.com/search?q=" + encodeURIComponent(songTitle + " 歌詞") + cacheBuster
+          : "https://www.google.com/?t=" + Date.now();
+      } else if (url.includes("kbox") || url.includes("kkbox")) {
+        targetUrl = songTitle
+          ? "https://www.google.com/search?q=" + encodeURIComponent(songTitle + " 歌詞 site:lyrics.kkbox.com") + cacheBuster
+          : "https://lyrics.kkbox.com/?t=" + Date.now();
       }
 
       // 1. 標準強制外開
@@ -3247,29 +3261,59 @@
       }
     }
 
-    function getKkboxSearchUrl(rawTitle) {
+    function getChristianStudySearchUrl(rawTitle) {
       const songTitle = (rawTitle !== undefined ? rawTitle : ($("songTitleInput")?.value || "")).trim();
-      const q = songTitle ? encodeURIComponent(songTitle + " 歌詞") : "";
-      return q ? `https://www.google.com/search?q=${q}+site:lyrics.kkbox.com` : "https://lyrics.kkbox.com/";
+      return songTitle
+        ? `https://www.google.com/search?q=${encodeURIComponent(songTitle + " site:christianstudy.com")}&t=${Date.now()}`
+        : `https://www.christianstudy.com/?t=${Date.now()}`;
+    }
+
+    function getTaiwanBibleSearchUrl(rawTitle) {
+      const songTitle = (rawTitle !== undefined ? rawTitle : ($("songTitleInput")?.value || "")).trim();
+      return songTitle
+        ? `https://www.google.com/search?q=${encodeURIComponent(songTitle + " site:taiwanbible.com/web/lyrics")}&t=${Date.now()}`
+        : `https://taiwanbible.com/web/lyrics/index.jsp?t=${Date.now()}`;
     }
 
     function getGoogleSearchUrl(rawTitle) {
       const songTitle = (rawTitle !== undefined ? rawTitle : ($("songTitleInput")?.value || "")).trim();
-      return `https://www.google.com/search?q=${encodeURIComponent(songTitle + " 歌詞")}`;
+      return songTitle
+        ? `https://www.google.com/search?q=${encodeURIComponent(songTitle + " 歌詞")}&t=${Date.now()}`
+        : `https://www.google.com/?t=${Date.now()}`;
+    }
+
+    function getKkboxSearchUrl(rawTitle) {
+      const songTitle = (rawTitle !== undefined ? rawTitle : ($("songTitleInput")?.value || "")).trim();
+      return songTitle
+        ? `https://www.google.com/search?q=${encodeURIComponent(songTitle + " 歌詞 site:lyrics.kkbox.com")}&t=${Date.now()}`
+        : `https://lyrics.kkbox.com/?t=${Date.now()}`;
     }
 
     function buildExternalSearchButtonsHtml(rawTitle) {
-      const kkUrl = prepareExternalSearchLink(null, getKkboxSearchUrl(rawTitle));
+      const csUrl = prepareExternalSearchLink(null, getChristianStudySearchUrl(rawTitle));
+      const tbUrl = prepareExternalSearchLink(null, getTaiwanBibleSearchUrl(rawTitle));
       const ggUrl = prepareExternalSearchLink(null, getGoogleSearchUrl(rawTitle));
-      return `<a class="btn btn-secondary btn-sm" target="_blank" rel="noopener noreferrer" data-external-search="kkbox" href="${kkUrl}" onclick="return window.forceOpenNewTab(event, 'https://lyrics.kkbox.com/');">🎵 KKBOX 搜尋</a><a class="btn btn-secondary btn-sm" target="_blank" rel="noopener noreferrer" data-external-search="google" href="${ggUrl}" onclick="return window.forceOpenNewTab(event, 'https://www.google.com/');">🌐 Google 搜尋</a>`;
+      const kkUrl = prepareExternalSearchLink(null, getKkboxSearchUrl(rawTitle));
+      return [
+        `<a class="btn btn-secondary btn-sm" target="_blank" rel="noopener noreferrer" data-external-search="christianstudy" href="${csUrl}" onclick="return window.forceOpenNewTab(event, 'https://www.christianstudy.com/');">⚔️ 武林英雄帖</a>`,
+        `<a class="btn btn-secondary btn-sm" target="_blank" rel="noopener noreferrer" data-external-search="taiwanbible" href="${tbUrl}" onclick="return window.forceOpenNewTab(event, 'https://taiwanbible.com/web/lyrics/index.jsp');">📖 台灣聖經網</a>`,
+        `<a class="btn btn-secondary btn-sm" target="_blank" rel="noopener noreferrer" data-external-search="google" href="${ggUrl}" onclick="return window.forceOpenNewTab(event, 'https://www.google.com/');">🌐 Google 搜尋</a>`,
+        `<a class="btn btn-secondary btn-sm" target="_blank" rel="noopener noreferrer" data-external-search="kkbox" href="${kkUrl}" onclick="return window.forceOpenNewTab(event, 'https://lyrics.kkbox.com/');">🎵 KKBOX 搜尋</a>`
+      ].join("");
     }
 
     function syncExternalSearchLinks() {
-      document.querySelectorAll('a[data-external-search="kkbox"]').forEach(el => {
-        bindExternalNewTabButton(el, () => getKkboxSearchUrl(), "kkbox");
+      document.querySelectorAll('a[data-external-search="christianstudy"]').forEach(el => {
+        bindExternalNewTabButton(el, () => getChristianStudySearchUrl(), "christianstudy");
+      });
+      document.querySelectorAll('a[data-external-search="taiwanbible"]').forEach(el => {
+        bindExternalNewTabButton(el, () => getTaiwanBibleSearchUrl(), "taiwanbible");
       });
       document.querySelectorAll('a[data-external-search="google"]').forEach(el => {
         bindExternalNewTabButton(el, () => getGoogleSearchUrl(), "google");
+      });
+      document.querySelectorAll('a[data-external-search="kkbox"]').forEach(el => {
+        bindExternalNewTabButton(el, () => getKkboxSearchUrl(), "kkbox");
       });
     }
 
