@@ -381,6 +381,41 @@
       accent-color: var(--iris-deep);
       cursor: pointer;
     }
+    .range-stepper {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .range-stepper input[type="range"] {
+      flex: 1;
+      min-width: 0;
+    }
+    .step-btn {
+      width: 34px;
+      height: 34px;
+      min-width: 34px;
+      border-radius: 8px;
+      background: #faf7fe;
+      border: 1.5px solid #d8c8eb;
+      color: #523775;
+      font-size: 1.1rem;
+      font-weight: 700;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      user-select: none;
+      touch-action: manipulation;
+      transition: transform 0.1s ease, background 0.15s ease;
+    }
+    .step-btn:hover {
+      background: #f1e6fc;
+    }
+    .step-btn:active {
+      transform: scale(0.92);
+      background: #e9d9fb;
+    }
 
     /* Buttons */
     .btn {
@@ -1572,10 +1607,10 @@
 
         <div class="form-group">
           <label class="form-label">
-            <span>歌詞垂直位置（預設 14% 上方安全區）</span>
-            <span id="lyricsTopVal">14%</span>
+            <span>歌詞垂直位置（預設 10% 上方安全區）</span>
+            <span id="lyricsTopVal">10%</span>
           </label>
-          <input type="range" id="lyricsTopPct" min="5" max="75" value="14" />
+          <input type="range" id="lyricsTopPct" min="5" max="75" value="10" />
         </div>
       </div>
 
@@ -1660,21 +1695,42 @@
       <div class="grid-2">
         <div class="form-group">
           <label class="form-label"><span>水平位置 X</span><span id="mXVal">50%</span></label>
-          <input type="range" id="mX" min="15" max="85" value="50" />
+          <div class="range-stepper">
+            <button type="button" class="step-btn" data-target="mX" data-delta="-1" aria-label="減少水平位置 X">−</button>
+            <input type="range" id="mX" min="15" max="85" step="1" value="50" />
+            <button type="button" class="step-btn" data-target="mX" data-delta="1" aria-label="增加水平位置 X">+</button>
+          </div>
         </div>
         <div class="form-group">
-          <label class="form-label"><span>垂直位置 Y</span><span id="mYVal">14%</span></label>
-          <input type="range" id="mY" min="5" max="80" value="14" />
+          <label class="form-label"><span>垂直位置 Y</span><span id="mYVal">10%</span></label>
+          <div class="range-stepper">
+            <button type="button" class="step-btn" data-target="mY" data-delta="-1" aria-label="減少垂直位置 Y">−</button>
+            <input type="range" id="mY" min="5" max="80" step="1" value="10" />
+            <button type="button" class="step-btn" data-target="mY" data-delta="1" aria-label="增加垂直位置 Y">+</button>
+          </div>
         </div>
         <div class="form-group">
           <label class="form-label"><span>此頁字級大小</span><span id="mSizeVal">44pt</span></label>
-          <input type="range" id="mSize" min="20" max="115" value="44" />
+          <div class="range-stepper">
+            <button type="button" class="step-btn" data-target="mSize" data-delta="-1" aria-label="減少此頁字級大小">−</button>
+            <input type="range" id="mSize" min="20" max="115" step="1" value="44" />
+            <button type="button" class="step-btn" data-target="mSize" data-delta="1" aria-label="增加此頁字級大小">+</button>
+          </div>
         </div>
         <div class="form-group">
-          <label class="form-label"><span>行距 / 字距</span><span id="mSpaceVal">1.35 / 0px</span></label>
-          <div class="input-row">
-            <input type="range" id="mLineHeight" min="100" max="200" value="135" style="flex:1;" />
-            <input type="range" id="mLetterSpace" min="0" max="12" value="0" style="flex:1;" />
+          <label class="form-label"><span>行距</span><span id="mLineHeightVal">1.20</span></label>
+          <div class="range-stepper">
+            <button type="button" class="step-btn" data-target="mLineHeight" data-delta="-5" aria-label="減少行距">−</button>
+            <input type="range" id="mLineHeight" min="100" max="200" step="5" value="120" />
+            <button type="button" class="step-btn" data-target="mLineHeight" data-delta="5" aria-label="增加行距">+</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label"><span>字距</span><span id="mLetterSpaceVal">0px</span></label>
+          <div class="range-stepper">
+            <button type="button" class="step-btn" data-target="mLetterSpace" data-delta="-1" aria-label="減少字距">−</button>
+            <input type="range" id="mLetterSpace" min="0" max="12" step="1" value="0" />
+            <button type="button" class="step-btn" data-target="mLetterSpace" data-delta="1" aria-label="增加字距">+</button>
           </div>
         </div>
       </div>
@@ -1863,7 +1919,7 @@
       splitMode: "2",
       fontFamily: "Microsoft JhengHei",
       lyricsFontSize: 60,
-      lyricsTopPct: 14,
+      lyricsTopPct: 10,
       bold: true,
       italic: false,
       textColor: "#ffffff",
@@ -2534,7 +2590,7 @@
           xPct: ov.xPct ?? 50,
           yPct: ov.yPct ?? state.lyricsTopPct,
           fontSize: ov.fontSize ?? state.lyricsFontSize,
-          lineHeight: ov.lineHeight ?? 1.35,
+          lineHeight: ov.lineHeight ?? 1.2,
           letterSpacing: ov.letterSpacing ?? 0
         });
       });
@@ -2850,7 +2906,7 @@
           const lw = estimateLineWidthPt(l, slide.fontSize || 60, slide.letterSpacing || 0);
           maxLineW = Math.max(maxLineW, lw);
           const wrapped = Math.max(1, Math.ceil(lw / maxUsableW));
-          totalVisualH += wrapped * (slide.fontSize || 60) * (slide.lineHeight || 1.35);
+          totalVisualH += wrapped * (slide.fontSize || 60) * (slide.lineHeight || 1.2);
         }
       }
 
@@ -2875,7 +2931,7 @@
         yPt = ((slide.yPct ?? 50) / 100) * SLIDE_H_PT - hPt / 2;
         yPt = Math.max(0, Math.min(SLIDE_H_PT - hPt, yPt));
       } else {
-        yPt = ((slide.yPct ?? 12) / 100) * SLIDE_H_PT;
+        yPt = ((slide.yPct ?? 10) / 100) * SLIDE_H_PT;
         yPt = Math.max(0, Math.min(SLIDE_H_PT - hPt, yPt));
       }
 
@@ -3070,7 +3126,7 @@
                 bold: Boolean(cfg.bold),
                 italic: Boolean(cfg.italic),
                 charSpacing: slide.letterSpacing || 0,
-                lineSpacingMultiple: Number(slide.lineHeight) || 1.35,
+                lineSpacingMultiple: Number(slide.lineHeight) || 1.2,
                 outline: baseOutline,
                 breakLine: idx < lines.length - 1
               }
@@ -3742,7 +3798,8 @@
       $("mXVal").textContent = x + "%";
       $("mYVal").textContent = y + "%";
       $("mSizeVal").textContent = sz + "pt";
-      $("mSpaceVal").textContent = `${lh.toFixed(2)} / ${ls}px`;
+      $("mLineHeightVal").textContent = lh.toFixed(2);
+      $("mLetterSpaceVal").textContent = ls + "px";
 
       applyBgToElements($("modalBgLayer"), $("modalFadeLayer"), getEffectiveBg(slide.isTitle));
 
@@ -4041,6 +4098,23 @@
     // Modal Controls
     ["mX", "mY", "mSize", "mLineHeight", "mLetterSpace", "mText"].forEach(id => {
       $(id).addEventListener("input", updateModalStage);
+    });
+    document.querySelectorAll(".step-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const targetId = btn.dataset.target;
+        const delta = parseFloat(btn.dataset.delta);
+        const input = $(targetId);
+        if (!input || Number.isNaN(delta)) return;
+        const min = parseFloat(input.min);
+        const max = parseFloat(input.max);
+        const cur = parseFloat(input.value);
+        let next = cur + delta;
+        if (!Number.isNaN(min)) next = Math.max(min, next);
+        if (!Number.isNaN(max)) next = Math.min(max, next);
+        input.value = String(next);
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+      });
     });
     $("btnCloseModal").addEventListener("click", () => $("editModal").classList.remove("open"));
     $("btnResetModal").addEventListener("click", () => {
