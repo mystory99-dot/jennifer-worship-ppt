@@ -877,12 +877,53 @@
     }
     .hidden { display: none !important; }
 
+    .song-auto-search-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .song-auto-search-btn {
+      background: linear-gradient(135deg, #523775 0%, #6b4c8c 100%);
+      color: #ffffff;
+      border: 1px solid #523775;
+      font-weight: 700;
+      padding: 9px 16px;
+      font-size: 0.92rem;
+      box-shadow: 0 3px 10px rgba(82, 55, 117, 0.24);
+      white-space: nowrap;
+    }
+    .song-auto-search-btn:hover {
+      filter: brightness(1.08);
+      transform: translateY(-1px);
+    }
+    .song-auto-search-hint {
+      font-size: 13.5px;
+      color: #523775;
+      background: #faf7fe;
+      border: 1px solid var(--iris-border);
+      border-radius: 999px;
+      padding: 5px 12px;
+      line-height: 1.45;
+      font-weight: 500;
+    }
+    .song-fallback-search {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px dashed var(--iris-border);
+    }
+    .song-fallback-label {
+      font-size: 13px;
+      color: #555555;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
     .song-search-actions {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
       width: 100%;
-      margin-top: 8px;
     }
     .song-search-actions .btn {
       flex: 1 1 116px;
@@ -903,8 +944,9 @@
     @media (max-width: 600px) {
       .step-card { padding: 14px; }
       .btn { font-size: 0.85rem; padding: 8px 12px; }
+      .song-auto-search-hint { border-radius: 10px; font-size: 13px; }
       .song-search-actions { gap: 6px; }
-      .song-search-actions .btn { font-size: 0.78rem; padding: 8px 4px; }
+      .song-search-actions .btn { flex: 1 1 calc(50% - 6px); font-size: 0.8rem; padding: 8px 6px; }
     }
   </style>
 </head>
@@ -1147,12 +1189,18 @@
           <div class="form-group">
             <label class="form-label" for="songTitleInput">詩歌歌名（標題頁主標題）</label>
             <input type="text" id="songTitleInput" value="奇異恩典" placeholder="輸入歌名，例如：奇異恩典" style="width:100%; display:block;" />
-            <div class="song-search-actions">
-              <button type="button" class="btn btn-accent btn-sm" id="btnAutoSearchLyrics">🔍 一鍵搜尋歌詞</button>
-              <a href="https://www.christianstudy.com/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" id="christianStudySearchBtn" data-external-search="christianstudy" onclick="return window.forceOpenNewTab(event, 'https://www.christianstudy.com/');">⚔️ 武林英雄帖</a>
-              <a href="https://taiwanbible.com/web/lyrics/index.jsp" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" id="taiwanBibleSearchBtn" data-external-search="taiwanbible" onclick="return window.forceOpenNewTab(event, 'https://taiwanbible.com/web/lyrics/index.jsp');">📖 台灣聖經網</a>
-              <a href="https://www.google.com/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" id="googleSearchBtn" data-external-search="google" onclick="return window.forceOpenNewTab(event, 'https://www.google.com/');">🌐 Google 搜尋</a>
-              <a href="https://lyrics.kkbox.com/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" id="kkboxSearchBtn" data-external-search="kkbox" onclick="return window.forceOpenNewTab(event, 'https://lyrics.kkbox.com/');">🎵 KKBOX 搜尋</a>
+            <div class="song-auto-search-row">
+              <button type="button" class="btn song-auto-search-btn" id="btnAutoSearchLyrics">✨ 一鍵搜尋歌詞</button>
+              <span class="song-auto-search-hint">💡 輸入歌名後點擊，搜尋成功會直接自動填入下方歌詞框！</span>
+            </div>
+            <div class="song-fallback-search">
+              <div class="song-fallback-label">🔍 若自動搜尋不到，可至以下網站手動搜尋複製（將開啟新網頁）：</div>
+              <div class="song-search-actions">
+                <a href="https://www.christianstudy.com/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" id="christianStudySearchBtn" data-external-search="christianstudy" onclick="return window.forceOpenNewTab(event, 'https://www.christianstudy.com/');">⚔️ 武林英雄帖</a>
+                <a href="https://taiwanbible.com/web/lyrics/index.jsp" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" id="taiwanBibleSearchBtn" data-external-search="taiwanbible" onclick="return window.forceOpenNewTab(event, 'https://taiwanbible.com/web/lyrics/index.jsp');">📖 台灣聖經網</a>
+                <a href="https://www.google.com/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" id="googleSearchBtn" data-external-search="google" onclick="return window.forceOpenNewTab(event, 'https://www.google.com/');">🌐 Google 搜尋</a>
+                <a href="https://lyrics.kkbox.com/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" id="kkboxSearchBtn" data-external-search="kkbox" onclick="return window.forceOpenNewTab(event, 'https://lyrics.kkbox.com/');">🎵 KKBOX 搜尋</a>
+              </div>
             </div>
             <div id="lyricsSearchStatus" class="status-note status-info"></div>
             <div id="lyricsSearchChoices" class="pill-group" style="margin-top:6px;"></div>
@@ -3355,7 +3403,7 @@
         syncExternalSearchLinks();
         renderPreview();
         btn.disabled = false;
-        btn.textContent = "🔍 一鍵搜尋歌詞";
+        btn.textContent = "✨ 一鍵搜尋歌詞";
         return;
       }
 
@@ -3402,7 +3450,7 @@
           }
 
           btn.disabled = false;
-          btn.textContent = "🔍 一鍵搜尋歌詞";
+          btn.textContent = "✨ 一鍵搜尋歌詞";
           return;
         }
       } catch {
@@ -3413,7 +3461,7 @@
       status.innerHTML = `<span>線上曲庫暫無「${title}」，可點右側搜尋並貼回下方一鍵斷句：</span>${buildExternalSearchButtonsHtml(title)}`;
       syncExternalSearchLinks();
       btn.disabled = false;
-      btn.textContent = "🔍 一鍵搜尋歌詞";
+      btn.textContent = "✨ 一鍵搜尋歌詞";
     }
 
     /* =========================================================================
