@@ -909,6 +909,34 @@
       line-height: 1.45;
       font-weight: 500;
     }
+    .search-status-msg {
+      display: none;
+      margin-top: 8px;
+      padding: 9px 12px;
+      border-radius: 8px;
+      font-size: 0.86rem;
+      font-weight: 600;
+      line-height: 1.55;
+    }
+    .search-status-msg.show {
+      display: block;
+    }
+    .search-status-msg.loading {
+      background: #f5f0fb;
+      color: #523775;
+      border: 1px solid #d9c8ee;
+    }
+    .search-status-msg.success {
+      background: #ecfdf5;
+      color: #065f46;
+      border: 1px solid #a7f3d0;
+    }
+    .search-status-msg.warn {
+      background: #fff7ed;
+      color: #c2410c;
+      border: 1.5px solid #fb923c;
+      box-shadow: 0 2px 6px rgba(234, 88, 12, 0.12);
+    }
     .song-fallback-search {
       margin-top: 10px;
       padding-top: 10px;
@@ -1200,11 +1228,12 @@
         <div class="grid-2">
           <div class="form-group">
             <label class="form-label" for="songTitleInput">詩歌歌名（標題頁主標題）</label>
-            <input type="text" id="songTitleInput" value="奇異恩典" placeholder="輸入歌名，例如：奇異恩典" style="width:100%; display:block;" />
+            <input type="text" id="songTitleInput" value="奇異恩典" placeholder="請輸入詩歌歌名（例如：奇異恩典）" style="width:100%; display:block;" />
             <div class="song-auto-search-row">
               <button type="button" class="btn song-auto-search-btn" id="btnAutoSearchLyrics">✨ 一鍵搜尋歌詞</button>
               <span class="song-auto-search-hint">💡 輸入歌名後點擊，搜尋成功會直接自動填入下方歌詞框！</span>
             </div>
+            <div id="searchStatusMsg" class="search-status-msg" role="status" aria-live="polite"></div>
             <div class="song-fallback-search">
               <div class="song-fallback-label">🔍 若自動搜尋不到，可至以下網站手動搜尋，直接「<span class="fallback-key">複製</span>」文字或「<span class="fallback-key">截圖</span>」上傳（將開啟新網頁）：</div>
               <div class="song-search-actions">
@@ -3377,6 +3406,26 @@
       });
     }
 
+    function isDefaultDemoLyrics(val) {
+      const t = (val || "").trim();
+      if (!t) return false;
+      const defaultVal = ($("lyricsInput")?.defaultValue || "").trim();
+      if (defaultVal && t === defaultVal) return true;
+      return t.includes("奇異恩典 何等甘甜") && t.includes("真是何等寶貴");
+    }
+
+    function setSearchStatusMsg(type, text) {
+      const box = $("searchStatusMsg");
+      if (!box) return;
+      if (!type || !text) {
+        box.className = "search-status-msg";
+        box.textContent = "";
+        return;
+      }
+      box.className = `search-status-msg show ${type}`;
+      box.textContent = text;
+    }
+
     function applyLyricsMatch(item, statusEl) {
       const raw = item.plainLyrics || item.syncedLyrics;
       $("lyricsInput").value = cleanAndSplitLyrics(raw);
@@ -3384,6 +3433,7 @@
       statusEl.className = "status-note status-info show";
       const artist = item.artistName ? `（${item.artistName}）` : "";
       const title = $("songTitleInput").value.trim();
+      setSearchStatusMsg("success", `✅ 已成功找到「${title || item.trackName || "未知曲目"}」的歌詞，並自動填入下方歌詞框！`);
       statusEl.innerHTML = `<span>已載入「${item.trackName || "未知曲目"}${artist}」並完成智慧斷句與副歌偵測！</span>${buildExternalSearchButtonsHtml(title)}`;
       syncExternalSearchLinks();
       renderPreview();
@@ -3395,6 +3445,7 @@
       const choices = $("lyricsSearchChoices");
       choices.innerHTML = "";
       if (!title) {
+        setSearchStatusMsg("warn", "⚠️ 請先輸入詩歌歌名再搜尋。");
         status.className = "status-note status-warn show";
         status.textContent = "請先輸入詩歌歌名再搜尋。";
         return;
@@ -3403,6 +3454,7 @@
       const btn = $("btnAutoSearchLyrics");
       btn.disabled = true;
       btn.textContent = "搜尋中...";
+      setSearchStatusMsg("loading", `⏳ 正在搜尋「${title}」的歌詞，請稍候...`);
       status.className = "status-note status-info show";
       status.textContent = `正在搜尋歌名「${title}」歌詞...`;
 
@@ -3410,6 +3462,7 @@
       if (BUILTIN_HYMNS[title] || BUILTIN_HYMNS[key]) {
         $("lyricsInput").value = cleanAndSplitLyrics(BUILTIN_HYMNS[title] || BUILTIN_HYMNS[key]);
         state.overrides = {};
+        setSearchStatusMsg("success", `✅ 已成功找到「${title}」的歌詞，並自動填入下方歌詞框！`);
         status.className = "status-note status-info show";
         status.innerHTML = `<span>已從內建經典詩歌庫載入「${title}」並完成斷句與副歌標記！</span>${buildExternalSearchButtonsHtml(title)}`;
         syncExternalSearchLinks();
@@ -3440,6 +3493,12 @@
           if (topScore >= 2) {
             applyLyricsMatch(list[0], status);
           } else {
+            if (isDefaultDemoLyrics($("lyricsInput").value)) {
+              $("lyricsInput").value = "";
+              state.overrides = {};
+              renderPreview();
+            }
+            setSearchStatusMsg("warn", `⚠️ 找不到「${title}」的自動歌詞！請直接點選下方的「武林英雄帖、台灣聖經網、Google 或 KKBOX」網站搜尋，並【複製】文字或【截圖】上傳。`);
             status.className = "status-note status-warn show";
             status.innerHTML = `<span>未找到歌名完全相符的「${title}」，請從下方相關曲目點選，或改用外部搜尋：</span>${buildExternalSearchButtonsHtml(title)}`;
             syncExternalSearchLinks();
@@ -3469,6 +3528,12 @@
         // Fallback to web links below
       }
 
+      if (isDefaultDemoLyrics($("lyricsInput").value)) {
+        $("lyricsInput").value = "";
+        state.overrides = {};
+        renderPreview();
+      }
+      setSearchStatusMsg("warn", `⚠️ 找不到「${title}」的自動歌詞！請直接點選下方的「武林英雄帖、台灣聖經網、Google 或 KKBOX」網站搜尋，並【複製】文字或【截圖】上傳。`);
       status.className = "status-note status-warn show";
       status.innerHTML = `<span>線上曲庫暫無「${title}」，可點右側搜尋並貼回下方一鍵斷句：</span>${buildExternalSearchButtonsHtml(title)}`;
       syncExternalSearchLinks();
@@ -3657,6 +3722,22 @@
       state.enableTitleSlide = e.target.checked;
       $("titleSlideBox").classList.toggle("hidden", !state.enableTitleSlide);
       renderPreview();
+    });
+    $("songTitleInput").addEventListener("focus", function () {
+      if (this.value.trim() === "奇異恩典") {
+        this.value = "";
+        state.songTitle = "";
+        if (state.titleOverride) delete state.titleOverride.text;
+        syncExternalSearchLinks();
+        const lyricsEl = $("lyricsInput");
+        if (lyricsEl && isDefaultDemoLyrics(lyricsEl.value)) {
+          lyricsEl.value = "";
+          state.overrides = {};
+          renderPreview();
+        } else {
+          updateTitleSlideOnly();
+        }
+      }
     });
     $("songTitleInput").addEventListener("input", (e) => {
       state.songTitle = e.target.value;
