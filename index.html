@@ -855,7 +855,7 @@
       position: absolute;
       left: 50%;
       transform: translateX(-50%);
-      width: 88%;
+      width: 95%;
       text-align: center;
       word-break: keep-all;
       overflow-wrap: break-word;
@@ -942,8 +942,10 @@
       transform: translate(-50%, 0);
       cursor: move;
       text-align: center;
-      padding: 4px 10px;
-      border: 1.5px dashed rgba(255, 255, 255, 0.7);
+      word-break: keep-all;
+      overflow-wrap: break-word;
+      padding: 2px 5px;
+      outline: 1.5px dashed rgba(255, 255, 255, 0.7);
       border-radius: 6px;
     }
     .toast {
@@ -2638,6 +2640,8 @@
       return `rgba(${r}, ${g}, ${b}, ${(opacityPct / 100).toFixed(2)})`;
     }
 
+    const PT_TO_PX = 96 / 72;
+
     function renderSlideBoxContent(boxEl, slide, scaleFactor) {
       boxEl.innerHTML = "";
       const safeX = slide.xPct ?? 50;
@@ -2651,7 +2655,7 @@
       boxEl.style.fontStyle = state.italic ? "italic" : "normal";
       boxEl.style.color = state.textColor;
       boxEl.style.lineHeight = slide.lineHeight;
-      boxEl.style.letterSpacing = (slide.letterSpacing * scaleFactor).toFixed(1) + "px";
+      boxEl.style.letterSpacing = (slide.letterSpacing * PT_TO_PX * scaleFactor).toFixed(2) + "px";
 
       if (state.enableStroke) {
         const w = Math.max(0.8, 2.2 * scaleFactor).toFixed(1);
@@ -2661,41 +2665,45 @@
         boxEl.style.webkitTextStroke = "0px transparent";
       }
 
+      const padV = (2 * PT_TO_PX * scaleFactor).toFixed(2);
+      const padH = (4 * PT_TO_PX * scaleFactor).toFixed(2);
       if (state.backdropMode === "full") {
         boxEl.style.width = "100%";
-        boxEl.style.padding = `${8 * scaleFactor}px ${16 * scaleFactor}px`;
+        boxEl.style.maxWidth = "100%";
+        boxEl.style.padding = `${padV}px ${padH}px`;
         boxEl.style.backgroundColor = hexToRgba(state.backdropColor, state.backdropOpacity);
         boxEl.style.borderRadius = "0px";
       } else if (state.backdropMode === "fit") {
         boxEl.style.width = "auto";
-        boxEl.style.maxWidth = "90%";
-        boxEl.style.padding = `${8 * scaleFactor}px ${18 * scaleFactor}px`;
+        boxEl.style.maxWidth = "95%";
+        boxEl.style.padding = `${padV}px ${padH}px`;
         boxEl.style.backgroundColor = hexToRgba(state.backdropColor, state.backdropOpacity);
         boxEl.style.borderRadius = `${6 * scaleFactor}px`;
       } else {
-        boxEl.style.width = "88%";
-        boxEl.style.padding = "0";
+        boxEl.style.width = "95%";
+        boxEl.style.maxWidth = "95%";
+        boxEl.style.padding = `${padV}px ${padH}px`;
         boxEl.style.backgroundColor = "transparent";
       }
 
       const lines = slide.text.split("\n");
       if (slide.isTitle) {
         const titleDiv = document.createElement("div");
-        titleDiv.style.fontSize = (slide.fontSize * scaleFactor).toFixed(2) + "px";
+        titleDiv.style.fontSize = (slide.fontSize * PT_TO_PX * scaleFactor).toFixed(2) + "px";
         titleDiv.textContent = lines[0] || "";
         boxEl.appendChild(titleDiv);
 
         if (lines.length > 1 && lines.slice(1).join("").trim() !== "") {
           const subDiv = document.createElement("div");
-          subDiv.style.fontSize = (state.subtitleFontSize * scaleFactor).toFixed(2) + "px";
-          subDiv.style.marginTop = (10 * scaleFactor).toFixed(1) + "px";
+          subDiv.style.fontSize = (state.subtitleFontSize * PT_TO_PX * scaleFactor).toFixed(2) + "px";
+          subDiv.style.marginTop = (12 * PT_TO_PX * scaleFactor).toFixed(1) + "px";
           subDiv.style.opacity = "0.92";
           subDiv.textContent = lines.slice(1).join("\n");
           boxEl.appendChild(subDiv);
         }
       } else {
-        // Strictly lock lyric font size to slide.fontSize (from lyricsFontSize slider) with zero character-count scaling
-        boxEl.style.fontSize = (slide.fontSize * scaleFactor).toFixed(2) + "px";
+        // Strictly lock lyric font size to PowerPoint pt-to-px ratio (pt * 1.3333 * stageScale) for 100% WYSIWYG wrapping
+        boxEl.style.fontSize = (slide.fontSize * PT_TO_PX * scaleFactor).toFixed(2) + "px";
         lines.forEach((l, i) => {
           if (i > 0) boxEl.appendChild(document.createElement("br"));
           boxEl.appendChild(document.createTextNode(l));
@@ -2884,7 +2892,7 @@
 
     function computePptxBoxInches(slide, cfg = state) {
       const lines = slide.text.split("\n");
-      const maxUsableW = SLIDE_W_PT * 0.90;
+      const maxUsableW = SLIDE_W_PT * 0.95;
       let maxLineW = 0;
       let totalVisualH = 0;
       const backdropMode = cfg.backdropMode ?? state.backdropMode;
@@ -2892,27 +2900,27 @@
 
       if (slide.isTitle) {
         const titleLine = lines[0] || "";
-        const tw = estimateLineWidthPt(titleLine, slide.fontSize || 44, slide.letterSpacing || 0);
+        const tw = estimateLineWidthPt(titleLine, (slide.fontSize || 80) * PT_TO_PX, (slide.letterSpacing || 0) * PT_TO_PX);
         maxLineW = Math.max(maxLineW, tw);
         const wrappedTitleLines = Math.max(1, Math.ceil(tw / maxUsableW));
-        totalVisualH += wrappedTitleLines * (slide.fontSize || 44) * (slide.lineHeight || 1.25);
+        totalVisualH += wrappedTitleLines * ((slide.fontSize || 80) * PT_TO_PX) * (slide.lineHeight || 1.25);
 
         const subLines = lines.slice(1).filter(l => l.trim() !== "");
         if (subLines.length > 0) {
           totalVisualH += 14;
           for (const sl of subLines) {
-            const sw = estimateLineWidthPt(sl, subtitleFontSize || 24, 0);
+            const sw = estimateLineWidthPt(sl, (subtitleFontSize || 24) * PT_TO_PX, 0);
             maxLineW = Math.max(maxLineW, sw);
             const wrappedSub = Math.max(1, Math.ceil(sw / maxUsableW));
-            totalVisualH += wrappedSub * (subtitleFontSize || 24) * 1.35;
+            totalVisualH += wrappedSub * ((subtitleFontSize || 24) * PT_TO_PX) * 1.35;
           }
         }
       } else {
         for (const l of lines) {
-          const lw = estimateLineWidthPt(l, slide.fontSize || 60, slide.letterSpacing || 0);
+          const lw = estimateLineWidthPt(l, (slide.fontSize || 60) * PT_TO_PX, (slide.letterSpacing || 0) * PT_TO_PX);
           maxLineW = Math.max(maxLineW, lw);
           const wrapped = Math.max(1, Math.ceil(lw / maxUsableW));
-          totalVisualH += wrapped * (slide.fontSize || 60) * (slide.lineHeight || 1.0);
+          totalVisualH += wrapped * ((slide.fontSize || 60) * PT_TO_PX) * (slide.lineHeight || 1.0);
         }
       }
 
@@ -2920,12 +2928,12 @@
       if (backdropMode === "full") {
         wPt = SLIDE_W_PT;
       } else if (backdropMode === "fit") {
-        wPt = Math.min(SLIDE_W_PT * 0.90, Math.max(220, maxLineW + 48));
+        wPt = Math.min(SLIDE_W_PT * 0.95, Math.max(220, maxLineW + 48));
       } else {
-        wPt = SLIDE_W_PT * 0.90;
+        wPt = SLIDE_W_PT * 0.95;
       }
 
-      const hPt = Math.min(SLIDE_H_PT * 0.90, Math.max((slide.fontSize || 44) * 1.5, totalVisualH + 28));
+      const hPt = Math.min(SLIDE_H_PT * 0.90, Math.max(((slide.fontSize || 44) * PT_TO_PX) * 1.5, totalVisualH + 28));
 
       let xPt = backdropMode === "full"
         ? 0
@@ -3062,7 +3070,7 @@
           h: box.h,
           align: "center",
           valign: slide.isTitle ? "middle" : "top",
-          margin: [8, 12, 8, 12],
+          margin: [2, 4, 2, 4],
           wrap: true,
           shadow: {
             type: "outer",
@@ -3786,8 +3794,8 @@
       $("mLineHeight").value = Math.round(slide.lineHeight * 100);
       $("mLetterSpace").value = slide.letterSpacing;
       $("mText").value = slide.text;
-      updateModalStage();
       $("editModal").classList.add("open");
+      updateModalStage();
     }
 
     function updateModalStage() {
