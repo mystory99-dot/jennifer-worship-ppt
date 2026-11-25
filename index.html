@@ -1607,10 +1607,10 @@
 
         <div class="form-group">
           <label class="form-label">
-            <span>歌詞垂直位置（預設 10% 上方安全區）</span>
-            <span id="lyricsTopVal">10%</span>
+            <span>歌詞垂直位置（預設 5% 上方安全區）</span>
+            <span id="lyricsTopVal">5%</span>
           </label>
-          <input type="range" id="lyricsTopPct" min="5" max="75" value="10" />
+          <input type="range" id="lyricsTopPct" min="5" max="75" value="5" />
         </div>
       </div>
 
@@ -1702,10 +1702,10 @@
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label"><span>垂直位置 Y</span><span id="mYVal">10%</span></label>
+          <label class="form-label"><span>垂直位置 Y</span><span id="mYVal">5%</span></label>
           <div class="range-stepper">
             <button type="button" class="step-btn" data-target="mY" data-delta="-1" aria-label="減少垂直位置 Y">−</button>
-            <input type="range" id="mY" min="5" max="80" step="1" value="10" />
+            <input type="range" id="mY" min="5" max="80" step="1" value="5" />
             <button type="button" class="step-btn" data-target="mY" data-delta="1" aria-label="增加垂直位置 Y">+</button>
           </div>
         </div>
@@ -1718,10 +1718,10 @@
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label"><span>行距</span><span id="mLineHeightVal">1.20</span></label>
+          <label class="form-label"><span>行距</span><span id="mLineHeightVal">1.00</span></label>
           <div class="range-stepper">
             <button type="button" class="step-btn" data-target="mLineHeight" data-delta="-5" aria-label="減少行距">−</button>
-            <input type="range" id="mLineHeight" min="100" max="200" step="5" value="120" />
+            <input type="range" id="mLineHeight" min="100" max="200" step="5" value="100" />
             <button type="button" class="step-btn" data-target="mLineHeight" data-delta="5" aria-label="增加行距">+</button>
           </div>
         </div>
@@ -1740,9 +1740,10 @@
         <textarea id="mText" style="min-height:80px;"></textarea>
       </div>
 
-      <div class="input-row" style="justify-content:flex-end;">
+      <div class="input-row" style="justify-content:flex-end; flex-wrap:wrap; gap:8px;">
         <button type="button" class="btn btn-secondary" id="btnResetModal">重設此頁</button>
-        <button type="button" class="btn btn-primary" id="btnSaveModal">套用並關閉</button>
+        <button type="button" class="btn btn-primary" id="btnSaveModal">套用並關閉（僅此頁）</button>
+        <button type="button" class="btn btn-accent" id="btnApplyAllLyrics">📋 套用所有歌詞頁（不含歌名頁）</button>
       </div>
     </div>
   </div>
@@ -1919,7 +1920,10 @@
       splitMode: "2",
       fontFamily: "Microsoft JhengHei",
       lyricsFontSize: 60,
-      lyricsTopPct: 10,
+      lyricsTopPct: 5,
+      lyricsXPct: 50,
+      lyricsLineHeight: 1.0,
+      lyricsLetterSpacing: 0,
       bold: true,
       italic: false,
       textColor: "#ffffff",
@@ -2587,11 +2591,11 @@
           lyricIdx,
           section: chunkObj.section,
           text: ov.text !== undefined ? ov.text : chunkObj.text,
-          xPct: ov.xPct ?? 50,
+          xPct: ov.xPct ?? state.lyricsXPct ?? 50,
           yPct: ov.yPct ?? state.lyricsTopPct,
           fontSize: ov.fontSize ?? state.lyricsFontSize,
-          lineHeight: ov.lineHeight ?? 1.2,
-          letterSpacing: ov.letterSpacing ?? 0
+          lineHeight: ov.lineHeight ?? state.lyricsLineHeight ?? 1.0,
+          letterSpacing: ov.letterSpacing ?? state.lyricsLetterSpacing ?? 0
         });
       });
 
@@ -2878,27 +2882,29 @@
       return w;
     }
 
-    function computePptxBoxInches(slide) {
+    function computePptxBoxInches(slide, cfg = state) {
       const lines = slide.text.split("\n");
       const maxUsableW = SLIDE_W_PT * 0.90;
       let maxLineW = 0;
       let totalVisualH = 0;
+      const backdropMode = cfg.backdropMode ?? state.backdropMode;
+      const subtitleFontSize = cfg.subtitleFontSize ?? state.subtitleFontSize;
 
       if (slide.isTitle) {
         const titleLine = lines[0] || "";
         const tw = estimateLineWidthPt(titleLine, slide.fontSize || 44, slide.letterSpacing || 0);
         maxLineW = Math.max(maxLineW, tw);
         const wrappedTitleLines = Math.max(1, Math.ceil(tw / maxUsableW));
-        totalVisualH += wrappedTitleLines * (slide.fontSize || 44) * (slide.lineHeight || 1.3);
+        totalVisualH += wrappedTitleLines * (slide.fontSize || 44) * (slide.lineHeight || 1.25);
 
         const subLines = lines.slice(1).filter(l => l.trim() !== "");
         if (subLines.length > 0) {
           totalVisualH += 14;
           for (const sl of subLines) {
-            const sw = estimateLineWidthPt(sl, state.subtitleFontSize || 24, 0);
+            const sw = estimateLineWidthPt(sl, subtitleFontSize || 24, 0);
             maxLineW = Math.max(maxLineW, sw);
             const wrappedSub = Math.max(1, Math.ceil(sw / maxUsableW));
-            totalVisualH += wrappedSub * (state.subtitleFontSize || 24) * 1.35;
+            totalVisualH += wrappedSub * (subtitleFontSize || 24) * 1.35;
           }
         }
       } else {
@@ -2906,14 +2912,14 @@
           const lw = estimateLineWidthPt(l, slide.fontSize || 60, slide.letterSpacing || 0);
           maxLineW = Math.max(maxLineW, lw);
           const wrapped = Math.max(1, Math.ceil(lw / maxUsableW));
-          totalVisualH += wrapped * (slide.fontSize || 60) * (slide.lineHeight || 1.2);
+          totalVisualH += wrapped * (slide.fontSize || 60) * (slide.lineHeight || 1.0);
         }
       }
 
       let wPt;
-      if (state.backdropMode === "full") {
+      if (backdropMode === "full") {
         wPt = SLIDE_W_PT;
-      } else if (state.backdropMode === "fit") {
+      } else if (backdropMode === "fit") {
         wPt = Math.min(SLIDE_W_PT * 0.90, Math.max(220, maxLineW + 48));
       } else {
         wPt = SLIDE_W_PT * 0.90;
@@ -2921,7 +2927,7 @@
 
       const hPt = Math.min(SLIDE_H_PT * 0.90, Math.max((slide.fontSize || 44) * 1.5, totalVisualH + 28));
 
-      let xPt = state.backdropMode === "full"
+      let xPt = backdropMode === "full"
         ? 0
         : ((slide.xPct ?? 50) / 100) * SLIDE_W_PT - wPt / 2;
       xPt = Math.max(0, Math.min(SLIDE_W_PT - wPt, xPt));
@@ -2931,7 +2937,7 @@
         yPt = ((slide.yPct ?? 50) / 100) * SLIDE_H_PT - hPt / 2;
         yPt = Math.max(0, Math.min(SLIDE_H_PT - hPt, yPt));
       } else {
-        yPt = ((slide.yPct ?? 10) / 100) * SLIDE_H_PT;
+        yPt = ((slide.yPct ?? 5) / 100) * SLIDE_H_PT;
         yPt = Math.max(0, Math.min(SLIDE_H_PT - hPt, yPt));
       }
 
@@ -3047,9 +3053,7 @@
           s.background = { color: fallbackHex };
         }
 
-        const box = slide.isTitle
-          ? computePptxBoxInches(slide)
-          : { x: 0.5, y: 0.5625, w: 9.0, h: 1.6875 }; // Y: 10%, W: 90%, H: 30% on 16:9 (10" x 5.625")
+        const box = computePptxBoxInches(slide, cfg);
 
         const textBoxOpts = {
           x: box.x,
@@ -3083,8 +3087,9 @@
         const baseOutline = cfg.enableStroke ? { size: 1.5, color: strokeHex } : undefined;
 
         if (slide.isTitle) {
-          const mainPt = Number(slide.fontSize) || 44;
+          const mainPt = Number(slide.fontSize) || 80;
           const subPt = Number(cfg.subtitleFontSize) || 24;
+          const titleLh = Number(slide.lineHeight) || 1.25;
           runs.push({
             text: lines[0] || "",
             options: {
@@ -3093,7 +3098,8 @@
               color: textHex,
               bold: Boolean(cfg.bold),
               italic: Boolean(cfg.italic),
-              charSpacing: slide.letterSpacing || 0,
+              charSpacing: Number(slide.letterSpacing) || 0,
+              lineSpacingMultiple: titleLh,
               outline: baseOutline,
               breakLine: lines.length > 1
             }
@@ -3108,6 +3114,8 @@
                 color: textHex,
                 bold: Boolean(cfg.bold),
                 italic: Boolean(cfg.italic),
+                charSpacing: Number(slide.letterSpacing) || 0,
+                lineSpacingMultiple: titleLh,
                 outline: baseOutline,
                 paraSpaceBefore: idx === 0 ? 12 : 4,
                 breakLine: idx < subLines.length - 1
@@ -3125,8 +3133,8 @@
                 color: textHex,
                 bold: Boolean(cfg.bold),
                 italic: Boolean(cfg.italic),
-                charSpacing: slide.letterSpacing || 0,
-                lineSpacingMultiple: Number(slide.lineHeight) || 1.2,
+                charSpacing: Number(slide.letterSpacing) || 0,
+                lineSpacingMultiple: Number(slide.lineHeight) || 1.0,
                 outline: baseOutline,
                 breakLine: idx < lines.length - 1
               }
@@ -4126,6 +4134,15 @@
           updateTitleSlideOnly();
         } else if (slide) {
           delete state.overrides[slide.lyricIdx];
+          if (state.lyricsTopPct !== 5 || state.lyricsLineHeight !== 1.0 || state.lyricsXPct !== 50 || state.lyricsLetterSpacing !== 0) {
+            state.overrides[slide.lyricIdx] = {
+              xPct: 50,
+              yPct: 5,
+              fontSize: state.lyricsFontSize,
+              lineHeight: 1.0,
+              letterSpacing: 0
+            };
+          }
           $("editModal").classList.remove("open");
           renderPreview();
         }
@@ -4153,6 +4170,56 @@
         }
         showToast("已套用單頁微調");
       }
+    });
+    $("btnApplyAllLyrics").addEventListener("click", () => {
+      if (state.editingIdx < 0) return;
+      const currentSlide = state.slides[state.editingIdx];
+      const layoutStyle = {
+        xPct: parseInt($("mX").value, 10),
+        yPct: parseInt($("mY").value, 10),
+        fontSize: parseInt($("mSize").value, 10),
+        lineHeight: parseInt($("mLineHeight").value, 10) / 100,
+        letterSpacing: parseInt($("mLetterSpace").value, 10)
+      };
+
+      // Update global lyric layout defaults & Step 02 UI controls
+      state.lyricsXPct = layoutStyle.xPct;
+      state.lyricsTopPct = layoutStyle.yPct;
+      state.lyricsFontSize = layoutStyle.fontSize;
+      state.lyricsLineHeight = layoutStyle.lineHeight;
+      state.lyricsLetterSpacing = layoutStyle.letterSpacing;
+
+      const topSlider = $("lyricsTopPct");
+      if (topSlider) {
+        topSlider.value = String(Math.min(parseInt(topSlider.max, 10) || 75, Math.max(parseInt(topSlider.min, 10) || 5, layoutStyle.yPct)));
+      }
+      if ($("lyricsTopVal")) $("lyricsTopVal").textContent = layoutStyle.yPct + "%";
+
+      const sizeSlider = $("lyricsFontSize");
+      if (sizeSlider) {
+        sizeSlider.value = String(Math.min(parseInt(sizeSlider.max, 10) || 84, Math.max(parseInt(sizeSlider.min, 10) || 24, layoutStyle.fontSize)));
+      }
+      if ($("lyricsFontSizeVal")) $("lyricsFontSizeVal").textContent = layoutStyle.fontSize + "pt";
+
+      // Batch apply 5 layout parameters to all lyric slides ONLY (strictly skip index 0 / title slide, and preserve each slide's text)
+      let updatedCount = 0;
+      state.slides.forEach((s) => {
+        if (s.isTitle || s.lyricIdx < 0) return;
+        const prevOv = state.overrides[s.lyricIdx] || {};
+        const nextOv = {
+          ...prevOv,
+          ...layoutStyle
+        };
+        if (currentSlide && !currentSlide.isTitle && s.lyricIdx === currentSlide.lyricIdx && $("mText").value !== s.text) {
+          nextOv.text = $("mText").value;
+        }
+        state.overrides[s.lyricIdx] = nextOv;
+        updatedCount++;
+      });
+
+      $("editModal").classList.remove("open");
+      renderPreview();
+      showToast(`已將排版套用至全部 ${updatedCount} 張歌詞頁（已保留標題頁與各頁歌詞內容）`);
     });
 
     /* =========================================================================
